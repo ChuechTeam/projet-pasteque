@@ -5,6 +5,8 @@
 
 #define TAILLE 10
 
+typedef char matrice[TAILLE][TAILLE];
+
 void print_color(char ch) { //prints the colored character 
     switch(ch) {
         /*case 0: // black
@@ -49,41 +51,60 @@ void print_color(char ch) { //prints the colored character
             break;
         default: // default color
             printf("%c ", ch);
-
+            break;
     }
 }
 
+char fill(){
+    int random;
+    random = rand()%5; 
+    switch (random){
+        case 0:
+            return 'X';
+            break;
+        case 1:
+            return 'O';
+            break;
+        case 2:
+            return '&';
+            break;
+        case 3:
+            return '#';
+            break;
+        case 4:
+            return '$';
+            break;
+        default:
+            return '0';
+            break;
+    }
+}
 
-void fill(char tab[][TAILLE]){ // Fills the board initially
+void ini(matrice tab){ // Fills the board initially
     srand(time(NULL));
-    int random; 
     for (int i = 0; i < TAILLE; i++){
         for (int j = 0; j < TAILLE; j++){
-            random = rand()%5; 
-            switch (random){
-            case 0:
-                tab[i][j] = 'X';
-                break;
-            case 1:
-                tab[i][j] = 'O';
-                break;
-            case 2:
-                tab[i][j] = '&';
-                break;
-            case 3:
-                tab[i][j] = '#';
-                break;
-            case 4:
-                tab[i][j] = '$';
-                break;
-            default:
-                break;
-            }
+            tab[i][j]=fill();
         }
     } 
 }
 
-void boardprint(char tab[][TAILLE]) {
+void destroy(matrice tab, int i, int j){ //replaces all tiles above the destoyed tiles
+    for(i; i>0 ;i--){
+        tab[i][j]=tab[i-1][j];
+    }
+    tab[0][j] = fill(); //creates a new tiles at the top
+}
+
+void play(matrice tab){
+
+}
+
+void start(matrice tab){ // Initializes the board so 3 symbols are not connected
+     
+}
+
+void boardprint(matrice tab) {
     printf("   Welcome to CY Crush !\n\n");
     printf("    A B C D E F G H I J\n");
     for (int i = 0; i < TAILLE; i++) {
@@ -97,7 +118,7 @@ void boardprint(char tab[][TAILLE]) {
 
 int main() {
     char tableau[TAILLE][TAILLE];
-    fill(tableau);
+    ini(tableau);
     boardprint(tableau);
     return 0;
 }
