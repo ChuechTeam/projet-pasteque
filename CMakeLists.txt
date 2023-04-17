@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.7)
 project(projet_pasteque C)
 
 set(CMAKE_C_STANDARD 11)
