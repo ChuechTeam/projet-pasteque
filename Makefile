@@ -7,6 +7,8 @@ CFLAGS = -fPIC
 # Enable multi threading
 MAKEFLAGS = -j 4
 OUT = build-make
+INCLUDE_DIRS = include
+INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 # Register all C files here
 SRC_FILES = main.c
 OBJ_FILES = $(SRC_FILES:.c=.o)
@@ -22,11 +24,11 @@ make_build_dir:
 # The default rule for all object files.
 $(OUT)/%.o: src/%.c $(INCLUDE_FILES_FP) make_build_dir
 	@echo "Compiling $<..."
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 $(OUT)/projet_pasteque: $(OBJ_FILES_FP) 
 	@echo "Linking executable..."
-	@$(CC) $(CFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $< -o $@
 
 .PHONY: build
 build: $(OUT)/projet_pasteque
