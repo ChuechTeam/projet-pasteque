@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <sys/time.h>
 #include <unistd.h>
+#endif
 
 #include "libGameRGR2.h"
 #include "local.h"
@@ -58,7 +62,11 @@ GameData* createGame(int        nbCharX,
     pGame->pScreen        = pScreen;
     pGame->pUserData      = pUserData;
     pGame->pUserCallbacks = pCb;
-    pGame->displayFPS     = fps;  
+    pGame->displayFPS     = fps;
+#if _WIN32
+    // Set up the timer for 60 FPS sync (Windows only)
+    pGame->pWinTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+#endif
     // return game structure
     return pGame;  
 }
@@ -135,7 +143,15 @@ void gameLoop(GameData* pGame){
         startTime = endTime; 
         // Wait to achieve 60FPS
         if(frameTime <= 16666){
+#ifdef _WIN32
+            // PASTEQUE MOD: Wait using the Windows timer API to mimic usleep
+            LARGE_INTEGER waitTime;
+            waitTime.QuadPart = (16666-frameTime)*10; // Micro -> 100*Nano = 10*Micro
+            SetWaitableTimer(pGame->pWinTimer, &waitTime, 0, NULL, NULL, FALSE);
+            WaitForSingleObject(pGame->pWinTimer, 17); // Limit to 17 ms, just in case something goes wrong.
+#else
             usleep(16666-frameTime);
+#endif
         }       
     }
     //=======================================
@@ -150,6 +166,11 @@ void gameLoop(GameData* pGame){
     // Finish curses
     echo();
     endwin();
+
+#if _WIN32
+    // PASTEQUE MOD: Clear the sync timer for Windows
+    CloseHandle(pGame->pWinTimer);
+#endif
 }
 
 

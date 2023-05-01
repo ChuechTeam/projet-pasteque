@@ -1,12 +1,24 @@
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <sys/time.h>
+#endif
 #include <string.h>
 
 #include "libGameRGR2.h"
 
 unsigned long getTimeMicros(){
+#ifdef _WIN32
+    // PASTEQUE MOD: Use the Performance Counter Windows API to get the precise time
+    LARGE_INTEGER winTimeNanos;
+    QueryPerformanceCounter(&winTimeNanos);
+    long long timeMicros = winTimeNanos.QuadPart * 1000;
+    return (unsigned long)timeMicros;
+#else
     struct timeval tv;
     gettimeofday(&tv,NULL);
     return (tv.tv_sec*1000000) + (tv.tv_usec/1);
+#endif
 } 
 
 void checkGame(GameData* pGame, int errCode){

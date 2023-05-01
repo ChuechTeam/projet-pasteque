@@ -41,13 +41,17 @@
         UpdateCallback cbUpdate;
         DrawCallback   cbDraw;
         FinishCallback cbFinish;        
-    } Callbacks;    
+    } Callbacks;
+
     // Full game structure
     typedef struct{
         Screen*    pScreen;
         void*      pUserData;
         Callbacks* pUserCallbacks; 
-        int        displayFPS;       
+        int        displayFPS;
+#ifdef _WIN32
+        struct HANDLE* pWinTimer;
+#endif
     } GameData;
     
     //------------------------------

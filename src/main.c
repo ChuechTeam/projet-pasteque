@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "libGameRGR2.h"
 
 #define TAILLE 10
 
@@ -116,9 +117,9 @@ void boardprint(matrice tab) {
     }
 }
 
-int main() {
-    char tableau[TAILLE][TAILLE];
-    ini(tableau);
-    boardprint(tableau);
-    return 0;
-}
+//int main() {
+//    char tableau[TAILLE][TAILLE];
+//    ini(tableau);
+//    boardprint(tableau);
+//    return 0;
+//}
