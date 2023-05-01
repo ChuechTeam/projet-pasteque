@@ -51,6 +51,7 @@
         int        displayFPS;
 #ifdef _WIN32
         struct HANDLE* pWinTimer;
+        unsigned long winPerfCounterFreq;
 #endif
     } GameData;
     

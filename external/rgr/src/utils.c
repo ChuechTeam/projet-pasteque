@@ -7,12 +7,21 @@
 
 #include "libGameRGR2.h"
 
+#ifdef _WIN32
+// PASTEQUE MOD: Cache the Windows QPC ticks per second.
+long long winPerfCounterFrequency = 0;
+#endif
 unsigned long getTimeMicros(){
 #ifdef _WIN32
     // PASTEQUE MOD: Use the Performance Counter Windows API to get the precise time
+    if (winPerfCounterFrequency == 0) {
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        winPerfCounterFrequency = freq.QuadPart;
+    }
     LARGE_INTEGER winTimeNanos;
     QueryPerformanceCounter(&winTimeNanos);
-    long long timeMicros = winTimeNanos.QuadPart * 1000;
+    long long timeMicros = winTimeNanos.QuadPart * 1000000 / winPerfCounterFrequency;
     return (unsigned long)timeMicros;
 #else
     struct timeval tv;

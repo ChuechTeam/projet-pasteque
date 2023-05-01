@@ -65,7 +65,7 @@ GameData* createGame(int        nbCharX,
     pGame->displayFPS     = fps;
 #if _WIN32
     // Set up the timer for 60 FPS sync (Windows only)
-    pGame->pWinTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    pGame->pWinTimer = CreateWaitableTimerEx(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
 #endif
     // return game structure
     return pGame;  
@@ -130,6 +130,7 @@ void gameLoop(GameData* pGame){
         pCb->cbDraw(pDat, pScr);
         if(pGame->displayFPS != 0){
             move(0,0);
+            attron(COLOR_PAIR(1)); // PASTEQUE MOD: Stop FPS flickering
             printw("|FPS %ld|", (unsigned long)(0.99 + 1000000.0/frameTime));
         }
         refresh();
@@ -146,9 +147,12 @@ void gameLoop(GameData* pGame){
 #ifdef _WIN32
             // PASTEQUE MOD: Wait using the Windows timer API to mimic usleep
             LARGE_INTEGER waitTime;
-            waitTime.QuadPart = (16666-frameTime)*10; // Micro -> 100*Nano = 10*Micro
+            long long duration = (16666-frameTime)*10; // Micro -> 100*Nano = 10*Micro
+            // apparently the time has to be NEGATIVE, so it is considered as
+            // a relative offset
+            waitTime.QuadPart = -duration;
             SetWaitableTimer(pGame->pWinTimer, &waitTime, 0, NULL, NULL, FALSE);
-            WaitForSingleObject(pGame->pWinTimer, 17); // Limit to 17 ms, just in case something goes wrong.
+            WaitForSingleObject(pGame->pWinTimer, INFINITE);
 #else
             usleep(16666-frameTime);
 #endif
