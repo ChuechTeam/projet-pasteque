@@ -17,11 +17,19 @@
 #define SCREEN_HEIGHT 18
 
 typedef struct PastequeGameState_S {
-    unsigned long hello;
+    unsigned long gameTime;
 
     Panel panels[MAX_PANELS];
     // Convenience pointer to RGR Screen.
     Screen* screen;
+
+    // Previous/current filled pixels
+    // --------
+    // Those arrays are "screenshots" of all the pixels on a frame.
+    // Each pixel is either drawn (1) or cleared (0).
+    // Using those arrays, we can circumvent the issue of pixels that
+    // were drawn before, and now need to be cleared.
+
     // Value set to 1 if filled, 0 else.
     // This could be optimized to be a bitset but COME ON this is already complex enough...
     char prevFilledPixels[SCREEN_HEIGHT][SCREEN_WIDTH];

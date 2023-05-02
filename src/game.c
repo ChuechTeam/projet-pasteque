@@ -12,7 +12,8 @@ void drawMyPanel(Panel* pPanel, PastequeGameState* pState, void* sup) {
     panelDrawLine(pPanel, 0, 0, 6, 'A', PASTEQUE_COLOR_WHITE);
     panelDrawLine(pPanel, 1, 1, 4, 'B', PASTEQUE_COLOR_WHITE);
     panelDrawLine(pPanel, 2, 2, 2, 'C', PASTEQUE_COLOR_WHITE);
-    panelDrawLine(pPanel, (int)(pState->hello/1000000)%4, 4, 3, 'D', PASTEQUE_COLOR_WHITE);
+    panelDrawLine(pPanel, (int)(pState->gameTime/1000000)%4, 4, 3, 'D', PASTEQUE_COLOR_WHITE);
+    panelDrawText(pPanel, 0, 5, "salut", PASTEQUE_COLOR_WHITE);
 }
 
 // Called once at the very start
@@ -33,8 +34,8 @@ void event(void* pUserData, Screen* pScreen, Event* pEvent) {
 // deltaTime is the time elapsed, in microseconds (1ms = 1000µs), between the previous frame and now
 int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
     PastequeGameState* gs = pUserData;
-    gs->hello+=deltaTime;
-    panelTranslate(coolPanel, (int)(gs->hello/100000)%10, 3 + (int)(gs->hello/100000)%2);
+    gs->gameTime+=deltaTime;
+    panelTranslate(coolPanel, (int)(gs->gameTime/700000)%10 - 5, 3 + (int)(gs->gameTime/700000)%2);
     return 0; // Continue
 }
 

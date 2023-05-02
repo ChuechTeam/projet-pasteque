@@ -8,30 +8,55 @@
 #include <stdbool.h>
 #include <string.h>
 #include "libGameRGR2.h"
+#include <stdlib.h>
 
 const PanelAdornment noneAdornment = {PAS_NONE, 0};
 const Panel emptyPanel = {0};
 
-bool isWithinScreen(Screen* screen, int x, int y) {
+// HELPER FUNCTIONS
+
+inline bool isWithinScreen(Screen* screen, int x, int y) {
     return x >= 0 && y >= 0 && x < screen->width && y < screen->height;
 }
 
-void validatePanelCoords(int x, int y, int width, int height, const Screen* pScreen) {
-    if (x < 0 || y < 0 || width < 0 || height < 0) {
-        RAGE_QUIT(200, "Invalid panel rectangle: \n\t"
-                       "RECT: (x, y, width, height) = (%d, %d, %d, %d)", x, y, width, height);
+// Local coordinates!
+inline bool isYWithinPanel(Panel* panel, int y) {
+    return y >= 0 && y < panel->height && (panel->y + y) < panel->pScreen->height;
+}
+
+inline void lineIntersect(Panel* panel, int start, int length, int* outStart, int* outLength) {
+    if (start < 0) {
+        // We're in negative X. Adjust to get X = 0.
+        length += start; // Remove the "lost" length
+        start = 0;
     }
-    if ((x + width) >= pScreen->width || (y + height) >= pScreen->height) {
-        RAGE_QUIT(201, "Panel rectangle is out of screen:\n\t"
-                       "RECT: (x, y, width, height) = (%d, %d, %d, %d)\n\t"
-                       "SCREEN: (width, height) = (%d, %d)", x, y, width, height, pScreen->width, pScreen->height);
+
+    if (length <= 0) {
+        // Even with that adjustment, we're totally out of bounds here.
+        *outStart = 0;
+        *outLength = 0;
+        return;
+    }
+
+    // Find the max X coordinate (exclusive!)
+    int bound = min(panel->x + panel->width, panel->pScreen->width);
+    if (bound < 0) {
+        // Totally out of bounds: panel is fully on negative X.
+        *outStart = start;
+        *outLength = 0;
+    } else if (start + length >= bound) {
+        // Trim off the excess length.
+        *outStart = start;
+        *outLength = max(0, (start + length) - bound + 1);
+    } else {
+        // All good!
+        *outStart = start;
+        *outLength = length;
     }
 }
 
 Panel constructPanel(int index, int x, int y, int width, int height,
                      PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData, Screen* pScreen) {
-    // Validate the parameters
-    validatePanelCoords(x, y, width, height, pScreen);
     if (drawFunc == NULL) {
         RAGE_QUIT(202, "Panel draw function is null.");
     }
@@ -167,17 +192,15 @@ void panelDrawLine(Panel* pPanel, int x, int y, int w, char ch, int clrId) {
     } else if (isEmptyPanel(pPanel)) {
         RAGE_QUIT(211, "Cannot draw on an empty Panel.");
     }
-    // Remove any out of bound pixels.
-    int outOfBoundsPixels = (w + x) - pPanel->width + 1;
-    if (outOfBoundsPixels > 0) {
-        w -= outOfBoundsPixels;
-    }
-    int localX = pPanel->x + x;
-    int localY = pPanel->y + y;
-    if (localY >= pPanel->y + pPanel->height || w == 0) {
+
+    lineIntersect(pPanel, x, w, &x, &w);
+    if (w == 0 || !isYWithinPanel(pPanel, y)) {
         // No pixels to draw.
         return;
     }
+
+    int localX = pPanel->x + x;
+    int localY = pPanel->y + y;
 
     drawLine(pPanel->pScreen, localX, localY, w, ch, clrId);
 
@@ -185,7 +208,7 @@ void panelDrawLine(Panel* pPanel, int x, int y, int w, char ch, int clrId) {
     if (panelDrawGameState) {
         int finalX = localX + w; // Exclusive max
         for (int curX = localX; curX < finalX; ++curX) {
-            panelDrawGameState->curFilledPixels[localY][curX] = 1;
+            registerFilledPixel(curX, localY);
         }
     }
 }
@@ -196,25 +219,34 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId) {
     } else if (isEmptyPanel(pPanel)) {
         RAGE_QUIT(211, "Cannot draw on an empty Panel.");
     }
+
     // TODO: Do something when the text goes off the bounds.
     //       Wrap the text? Truncate?
-    int localX = pPanel->x + x;
-    int localY = pPanel->y + y;
-    if (localY >= pPanel->y + pPanel->height) {
+    if (!isYWithinPanel(pPanel, y)) {
         // No pixels to draw.
         return;
     }
+
+    int localX = pPanel->x + x;
+    int localY = pPanel->y + y;
+    int length = (int) strlen(pText);
+    if (localX < 0) { // Negative X, we need to correct some issues related to string rendering.
+        if (-localX >= length) {
+            // In that case, no text will be rendered at all!
+            return;
+        }
+        pText -= localX; // Skip x characters. Might cause issues with UTF-8.
+        length += localX; // Remove characters that we skipped on the length.
+        localX = 0;
+    }
+
     drawText(pPanel->pScreen, localX, localY, pText, clrId);
 
     // Register any filled pixels for dirty pixels detection.
     if (panelDrawGameState) {
-        int finalX = localX + (int) strlen(pText); // Exclusive max
-        int maxX = pPanel->x + pPanel->width; // Exclusive too
-        if (finalX > maxX) {
-            finalX = maxX;
-        }
+        int finalX = localX + length; // Exclusive max
         for (int curX = localX; curX < finalX; ++curX) {
-            panelDrawGameState->curFilledPixels[localY][curX] = 1;
+            registerFilledPixelUnsure(curX, localY);
         }
     }
 }
@@ -225,7 +257,6 @@ void panelTranslate(Panel* pPanel, int x, int y) {
     } else if (isEmptyPanel(pPanel)) {
         RAGE_QUIT(211, "Cannot translate an empty Panel.");
     }
-    validatePanelCoords(x, y, pPanel->width, pPanel->height, pPanel->pScreen);
     pPanel->x = x;
     pPanel->y = y;
 }
