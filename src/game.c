@@ -3,31 +3,33 @@
 #include <stdio.h>
 #include "game_state.h"
 #include "colors.h"
+#include "scene.h"
+#include "scenes/main_menu_scene.h"
+#include <ctype.h>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-
-Panel* coolPanel;
-void drawMyPanel(Panel* pPanel, PastequeGameState* pState, void* sup) {
-    panelDrawLine(pPanel, 0, 0, 6, 'A', PASTEQUE_COLOR_WHITE);
-    panelDrawLine(pPanel, 1, 1, 4, 'B', PASTEQUE_COLOR_WHITE);
-    panelDrawLine(pPanel, 2, 2, 2, 'C', PASTEQUE_COLOR_WHITE);
-    panelDrawLine(pPanel, (int)(pState->gameTime/1000000)%4, 4, 3, 'D', PASTEQUE_COLOR_WHITE);
-    panelDrawText(pPanel, 0, 5, "salut", PASTEQUE_COLOR_WHITE);
-}
 
 // Called once at the very start
 void init(void* pUserData, Screen* pScreen) {
     PastequeGameState* gs = pUserData;
     initGameState(gs, pScreen);
     initColors();
-
-    coolPanel = gsAddPanel(gs, 2, 2, 10, 6, (PanelAdornment){PAS_DOUBLE_BORDER, 2}, &drawMyPanel, NULL, pScreen);
+    gsSwitchScene(gs, SN_MAIN_MENU, makeMainMenuData());
 }
 
 // Called everytime a key is pressed.
 void event(void* pUserData, Screen* pScreen, Event* pEvent) {
+    PastequeGameState* gs = pUserData;
 
+    // On Windows, PDCurses uses lowercase characters for key events.
+    // This conflicts with the usual uppercase characters we get.
+    // And this also happens in Linux and this time I have no idea why!
+    if (pEvent->code >= 'a' && pEvent->code <= 'z') {
+        pEvent->code = (KeyCode)toupper(pEvent->code);
+    }
+
+    sceneEvent(gs->currentScene, gs->currentSceneData, gs, pEvent);
 }
 
 // Called every tick to update the game state.
@@ -35,20 +37,32 @@ void event(void* pUserData, Screen* pScreen, Event* pEvent) {
 int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
     PastequeGameState* gs = pUserData;
     gs->gameTime+=deltaTime;
-    panelTranslate(coolPanel, (int)(gs->gameTime/700000)%10 - 5, 3 + (int)(gs->gameTime/700000)%2);
-    return 0; // Continue
+
+    if (gs->quitRequested) {
+        return 1; // Stop!
+    } else {
+        sceneUpdate(gs->currentScene, gs->currentSceneData, gs, deltaTime);
+        return 0; // Continue
+    }
 }
 
 // Called just after update to draw on the screen.
 // IMPORTANT: The screen isn't cleared automatically. Any leftover should be cleared manually.
 void draw(void* pUserData, Screen* pScreen) {
     PastequeGameState* gs = pUserData;
+#if USE_ERASE
+    erase();
+#endif
+    sceneDrawBackground(gs->currentScene, gs->currentSceneData, gs);
     gsDrawAllPanels(gs);
+    sceneDrawForeground(gs->currentScene, gs->currentSceneData, gs);
 }
 
 // Called just before the game ends.
 void finish(void* pUserData) {
+    PastequeGameState* gs = pUserData;
 
+    sceneFinish(gs->currentScene, gs->currentSceneData, gs);
 }
 
 int main() {

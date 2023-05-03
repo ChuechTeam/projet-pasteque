@@ -17,7 +17,7 @@ add_subdirectory(external/rgr)
 
 # When creating a new C file, make sure to add it to this list!
 set(SOURCE_FILES
-        src/main.c src/game.c src/panel.c src/game_state.c)
+        src/main.c src/game.c src/panel.c src/game_state.c src/colors.c src/scene.c src/scenes/main_menu_scene.c src/scenes/crush_scene.c)
 
 add_executable(projet_pasteque ${SOURCE_FILES})
 add_common_compile_options(projet_pasteque)

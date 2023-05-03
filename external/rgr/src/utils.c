@@ -90,14 +90,17 @@ int checkEvent(GameData* pGame){
         // FUNCTION flags
         flag |= (size==5) && ((value & 0xFFFFFF00FF) == EXT_FN1); 
         flag |= (size==5) && ((value & 0xFFFFFF00FF) == EXT_FN2); 
-        flag |= (size==2) && ((value & 0xFF00      ) == EXT_FN3); 
-        
+        flag |= (size==2) && ((value & 0xFF00      ) == EXT_FN3);
+
+// PASTEQUE MOD: This is annoying. So now it's a toggle.
+#if defined(ENABLE_KEYBOARD_DEBUG) && ENABLE_KEYBOARD_DEBUG
         //* // DEBUG
         debug("|%3d| => [%0p]\n", ch, value); 
         if( flag ){
             debug("===>>>\n");
         } 
         // END DEBUG */
+#endif
         
         // Send event to user code
         if( flag ){

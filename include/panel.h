@@ -1,4 +1,4 @@
-/*
+/**
  * Panel.h
  * --------
  * Allows for organized drawing on screen with drawable regions called "panels".
@@ -68,10 +68,15 @@ typedef struct Panel_S {
     DrawPanelFunction drawFunc;
     /**
      * An optional data structure that can be used inside the Draw Function.
-     * This should point to a malloc-allocated structure and will be owned
-     * by the Panel, meaning that you shouldn't call `free` on it.
+     * This should point to a malloc-allocated structure and its ownership is
+     * determined by the value of freePanelDataOnDestroy, which is by default FALSE.
      */
     void* pPanelData;
+    /**
+     * When true, frees the panel data present on the panel when the panel is destroyed.
+     * Defaults to FALSE.
+     */
+    bool freePanelDataOnDestroy;
     /**
      * The RGR Game screen. Used internally for drawing on the screen.
      */
@@ -85,20 +90,71 @@ extern const Panel emptyPanel;
 
 /**
  * Used internally to create a Panel with validation.
+ * Use gsAddPanel to create a panel instead (game_state.h).
  */
 Panel constructPanel(int index, int x, int y, int width, int height,
                 PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData, Screen* pScreen);
 
+/**
+ * Returns true if a Panel is empty, meaning that it has a null drawFunc and won't
+ * draw anything on screen. Raises an error if the Panel is null.
+ * @param pPanel the panel to check
+ * @return true if the Panel is empty, false otherwise
+ */
 bool isEmptyPanel(const Panel* pPanel);
 
+/**
+ * Frees the panelData contained within the panel and sets it to NULL, depending
+ * on the value of freePanelDataOnDestroy.
+ * Does nothing if panelData is NULL, or if the Panel is NULL.
+ * @param pPanel the panel with data to be freed (can be null)
+ */
 void freePanelData(Panel* pPanel);
 
+/**
+ * Draws the panel on screen. Used internally by GameState.
+ * @param pPanel the panel to draw
+ * @param pGameState the game state
+ */
 void drawPanel(Panel* pPanel, struct PastequeGameState_S* pGameState);
 
+/**
+ * Draws a colored line inside the panel.
+ * The line starts at point (x, y), composed of the character ch repeated w times.
+ * The coordinates are relative to the panel's position.
+ * The line will be cut off if it goes outside the panel's region.
+ * Can only be used inside a Draw Function.
+ *
+ * @param pPanel the panel to draw into
+ * @param x the X coordinate
+ * @param y the Y coordinate
+ * @param w the length of the line
+ * @param ch the character to be repeated
+ * @param clrId the color of the line
+ */
 void panelDrawLine(Panel* pPanel, int x, int y, int w, char ch, int clrId);
 
+/**
+ * Draws a colored string inside the panel, starting at local coordinates (x, y).
+ * IMPORTANT: Currently, the string won't be truncated if it goes outside the panel.
+ * Can only be used inside a Draw Function.
+ *
+ * @param pPanel the panel to draw into
+ * @param x the X coordinate
+ * @param y the Y coordinate
+ * @param pText the string to draw
+ * @param clrId the color of the string
+ */
 void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId);
 
+/**
+ * Moves a panel to the given coordinates.
+ * The coordinates can be outside of the screen, and even negative.
+ *
+ * @param pPanel the panel to move
+ * @param x the X coordinate
+ * @param y the Y coordinate
+ */
 void panelTranslate(Panel* pPanel, int x, int y);
 
 #endif //PROJET_PASTEQUE_PANEL_H

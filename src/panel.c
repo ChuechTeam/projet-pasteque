@@ -15,16 +15,16 @@ const Panel emptyPanel = {0};
 
 // HELPER FUNCTIONS
 
-inline bool isWithinScreen(Screen* screen, int x, int y) {
+bool isWithinScreen(Screen* screen, int x, int y) {
     return x >= 0 && y >= 0 && x < screen->width && y < screen->height;
 }
 
 // Local coordinates!
-inline bool isYWithinPanel(Panel* panel, int y) {
+bool isYWithinPanel(Panel* panel, int y) {
     return y >= 0 && y < panel->height && (panel->y + y) < panel->pScreen->height;
 }
 
-inline void lineIntersect(Panel* panel, int start, int length, int* outStart, int* outLength) {
+void lineIntersect(Panel* panel, int start, int length, int* outStart, int* outLength) {
     if (start < 0) {
         // We're in negative X. Adjust to get X = 0.
         length += start; // Remove the "lost" length
@@ -39,7 +39,11 @@ inline void lineIntersect(Panel* panel, int start, int length, int* outStart, in
     }
 
     // Find the max X coordinate (exclusive!)
-    int bound = min(panel->x + panel->width, panel->pScreen->width);
+    int bound = panel->x + panel->width;
+    if (bound > panel->pScreen->width) {
+        // The panel is going out of bounds. Limit ourselves to the screen bound.
+        bound = panel->pScreen->width;
+    }
     if (bound < 0) {
         // Totally out of bounds: panel is fully on negative X.
         *outStart = start;
@@ -47,7 +51,11 @@ inline void lineIntersect(Panel* panel, int start, int length, int* outStart, in
     } else if (start + length >= bound) {
         // Trim off the excess length.
         *outStart = start;
-        *outLength = max(0, (start + length) - bound + 1);
+        *outLength = (start + length) - bound + 1;
+        if (*outLength < 0) {
+            // We might get a negative value, avoid that.
+            *outLength = 0;
+        }
     } else {
         // All good!
         *outStart = start;
@@ -63,6 +71,9 @@ Panel constructPanel(int index, int x, int y, int width, int height,
     if (pScreen == NULL) {
         RAGE_QUIT(203, "Panel screen is null.");
     }
+    if (width <= 0 || height <= 0) {
+        RAGE_QUIT(204, "Panel dimensions are invalid. (width, height) = (%d, %d)", width, height);
+    }
     Panel panel;
     panel.index = index;
     panel.x = x;
@@ -72,17 +83,24 @@ Panel constructPanel(int index, int x, int y, int width, int height,
     panel.adornment = adornment;
     panel.drawFunc = drawFunc;
     panel.pPanelData = pPanelData;
+    panel.freePanelDataOnDestroy = false;
     panel.pScreen = pScreen;
     return panel;
 }
 
 bool isEmptyPanel(const Panel* pPanel) {
+    if (pPanel == NULL) {
+        RAGE_QUIT(210, "Panel is NULL.");
+    }
     return pPanel->drawFunc == NULL;
 }
 
 void freePanelData(Panel* pPanel) {
     if (pPanel) {
-        free(pPanel->pPanelData);
+        if (pPanel->freePanelDataOnDestroy) {
+            free(pPanel->pPanelData);
+        }
+        pPanel->pPanelData = NULL;
     }
 }
 
@@ -95,7 +113,10 @@ PastequeGameState* panelDrawGameState = NULL;
 // A helper function for above variable. Make sure to check panelDrawGameState before.
 bool registerFilledPixelUnsure(int x, int y) {
     if (isWithinScreen(panelDrawGameState->screen, x, y)) {
+        // TODO: Remove this mechanism?
+#if !USE_ERASE
         panelDrawGameState->curFilledPixels[y][x] = 1;
+#endif
         return true;
     }
     return false;
@@ -103,7 +124,10 @@ bool registerFilledPixelUnsure(int x, int y) {
 
 // Same as registerFilledPixelUnsure, but now you're sure that the pixels exists!
 void registerFilledPixel(int x, int y) {
+    // TODO: Remove this mechanism?
+#if !USE_ERASE
     panelDrawGameState->curFilledPixels[y][x] = 1;
+#endif
 }
 
 // An internal function for drawing the adornment
@@ -132,6 +156,7 @@ void adornPanel(Panel* pPanel) {
     int maxX = pPanel->x + pPanel->width;
     int maxY = pPanel->y + pPanel->height;
 
+    // Draw the corners first.
     drawText(pPanel->pScreen, minX, minY, topLeftCorner, adornment.colorPair);
     bool hasTopLeft = registerFilledPixelUnsure(minX, minY);
     drawText(pPanel->pScreen, maxX, minY, topRightCorner, adornment.colorPair);
@@ -141,6 +166,7 @@ void adornPanel(Panel* pPanel) {
     drawText(pPanel->pScreen, maxX, maxY, bottomRightCorner, adornment.colorPair);
     bool hasBottomRight = registerFilledPixelUnsure(maxX, maxY);
 
+    // Draw the horizontal lines, between the corners
     for (int offsetX = 0; offsetX < pPanel->width; ++offsetX) {
         int charX = pPanel->x + offsetX;
         // Top horizontal line exists
@@ -157,6 +183,7 @@ void adornPanel(Panel* pPanel) {
         }
     }
 
+    // Draw the vertical lines, between the corners
     for (int offsetY = 0; offsetY < pPanel->height; ++offsetY) {
         int charY = pPanel->y + offsetY;
         // Left vertical line exists
@@ -180,7 +207,9 @@ void drawPanel(Panel* pPanel, PastequeGameState* pGameState) {
     }
     if (!isEmptyPanel(pPanel)) {
         panelDrawGameState = pGameState;
-        pPanel->drawFunc(pPanel, pGameState, pPanel->pScreen);
+        // Call the draw function so drawPanelX functions get called.
+        pPanel->drawFunc(pPanel, pGameState, pPanel->pPanelData);
+        // Then, adorn the panel, as the adornment can change inside the draw function.
         adornPanel(pPanel);
         panelDrawGameState = NULL;
     }

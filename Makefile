@@ -3,7 +3,7 @@
 # If you need incremental compilation, use CMake instead.
 CC = gcc
 # Add any options here
-CFLAGS = -fPIC
+CFLAGS = -std=c11 -fPIC
 # Enable multi threading
 MAKEFLAGS = -j 4
 OUT = build-make
@@ -17,7 +17,7 @@ LIBRARY_PATHS = external/rgr/lib
 LIBRARY_PATHS_ENV = external/rgr/lib
 LIBRARY_PATHS_FLAGS = $(addprefix -L, $(LIBRARY_PATHS))
 # Register all C files here
-SRC_FILES = main.c game.c game_state.c panel.c
+SRC_FILES = main.c game.c game_state.c panel.c colors.c scene.c scenes/main_menu_scene.c
 OBJ_FILES = $(SRC_FILES:.c=.o)
 OBJ_FILES_FP = $(addprefix $(OUT)/, $(OBJ_FILES))
 # Full paths to the project includes
@@ -27,7 +27,7 @@ all: build
 
 .PHONY: make_build_dir
 make_build_dir:
-	@mkdir -p $(OUT)
+	@mkdir -p $(OUT) && mkdir -p $(OUT)/scenes
 
 # The default rule for all object files.
 $(OUT)/%.o: src/%.c $(INCLUDE_FILES_FP) external/rgr/lib/libGameRGR2.so | make_build_dir

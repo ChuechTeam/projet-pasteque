@@ -2,9 +2,10 @@
 #include <malloc.h>
 #include <string.h>
 #include "colors.h"
+#include "game_state.h"
 
 Panel* gsAddPanel(PastequeGameState* pGameState, int x, int y, int width, int height, PanelAdornment adornment,
-                  DrawPanelFunction drawFunc, void* pPanelData, Screen* pScreen) {
+                  DrawPanelFunction drawFunc, void* pPanelData) {
     int availableSlot = -1;
     for (int i = 0; i < MAX_PANELS; ++i) {
         if (isEmptyPanel(&pGameState->panels[i])) {
@@ -16,7 +17,7 @@ Panel* gsAddPanel(PastequeGameState* pGameState, int x, int y, int width, int he
         RAGE_QUIT(300, "Max number of active panels reached.");
     }
     pGameState->panels[availableSlot] = constructPanel(availableSlot, x, y, width, height,
-                                                       adornment, drawFunc, pPanelData, pScreen);
+                                                       adornment, drawFunc, pPanelData, pGameState->screen);
     return &pGameState->panels[availableSlot];
 }
 
@@ -36,12 +37,15 @@ void gsRemovePanel(PastequeGameState* pGameState, Panel* panel) {
 }
 
 void gsDrawAllPanels(PastequeGameState* pGameState) {
+#if !USE_ERASE
     // We're on the next frame. Transfer the current pixels to the previous pixels, and clear our current pixels.
     memcpy(pGameState->prevFilledPixels, pGameState->curFilledPixels, sizeof(pGameState->curFilledPixels));
     memset(pGameState->curFilledPixels, 0, sizeof(pGameState->curFilledPixels));
+#endif
     for (int i = 0; i < MAX_PANELS; ++i) {
         drawPanel(&pGameState->panels[i], pGameState);
     }
+#if !USE_ERASE
     // Now, let's compare the pixels of the previous and current frame.
     // If there's a pixel that was FILLED BEFORE and is NOW CLEARED, clear it manually.
     for (int y = 0; y < SCREEN_HEIGHT; ++y) {
@@ -53,6 +57,7 @@ void gsDrawAllPanels(PastequeGameState* pGameState) {
             }
         }
     }
+#endif
 }
 
 PastequeGameState* makeGameState() {
@@ -66,4 +71,29 @@ PastequeGameState* makeGameState() {
 
 void initGameState(PastequeGameState* pGameState, Screen* pScreen) {
     pGameState->screen = pScreen;
+}
+
+void gsSwitchScene(PastequeGameState* pGameState, SceneName newScene, void* newSceneData) {
+    if (pGameState->currentSceneData) {
+        sceneFinish(pGameState->currentScene, pGameState->currentSceneData, pGameState);
+        free(pGameState->currentSceneData);
+    }
+    gsRemoveAllPanels(pGameState);
+    pGameState->currentScene = newScene;
+    pGameState->currentSceneData = newSceneData;
+    sceneInit(newScene, newSceneData, pGameState);
+}
+
+void gsRemoveAllPanels(PastequeGameState* pGameState) {
+    for (int i = 0; i < MAX_PANELS; ++i) {
+        Panel* panel = &pGameState->panels[i];
+        if (!isEmptyPanel(panel)) {
+            freePanelData(panel);
+            *panel = emptyPanel;
+        }
+    }
+}
+
+void gsQuitGame(PastequeGameState* pGameState) {
+    pGameState->quitRequested = true;
 }
