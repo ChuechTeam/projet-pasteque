@@ -1,7 +1,9 @@
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 #include "scenes/main_menu_scene.h"
 #include "colors.h"
+#include "scenes/crush_scene.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -33,6 +35,10 @@ MainMenuData* makeMainMenuData() {
     return data;
 }
 
+// -----------------------------------------------
+// PANEL DRAW FUNCTIONS (and other stuff)
+// -----------------------------------------------
+
 void drawTitlePanel(Panel* panel, PastequeGameState* gameState, void* osef) {
     panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF, TitleAsciiArtL1, PASTEQUE_COLOR_WHITE);
     panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 1, TitleAsciiArtL2, PASTEQUE_COLOR_WHITE);
@@ -49,14 +55,14 @@ void drawButtonGeneric(Panel* panel, char* label, int buttonIndex, void* panelDa
     ColorId color;
     if (data->focusedButtonIndex == buttonIndex) {
         color = PASTEQUE_COLOR_BLACK;
-        // Draw the background
+        // Draw the background of the button.
         panelDrawLine(panel, 2, 0, panel->width - 2, ' ', color);
-        // Draw the arrow
+        // Draw the arrow on the left.
         panelDrawText(panel, 0, 0, ArrowRight, PASTEQUE_COLOR_WHITE);
     } else {
         color = PASTEQUE_COLOR_WHITE;
     }
-    panelDrawText(panel, 1 + (BUTTON_WIDTH-(int)strlen(label))/2, 0, label, color);
+    panelDrawText(panel, 1 + (BUTTON_WIDTH - (int) strlen(label)) / 2, 0, label, color);
 }
 
 void drawPlayButtonPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
@@ -70,6 +76,10 @@ void drawHighScoresButtonPanel(Panel* panel, PastequeGameState* gameState, void*
 void drawQuitButtonPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
     drawButtonGeneric(panel, "Quitter", 2, panelData);
 }
+
+// -----------------------------------------------
+// GAME LIFECYCLE FUNCTIONS
+// -----------------------------------------------
 
 void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
     PanelAdornment adorn = {.style = PAS_DOUBLE_BORDER, .colorPair = PASTEQUE_COLOR_WHITE};
@@ -101,7 +111,8 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         // Run the button action
         switch (data->focusedButtonIndex) {
             case 0: // Play
-                gsSwitchScene(gameState, SN_CRUSH, NULL);
+                // TODO: Configurable size.
+                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(12, 8, CIM_ALL));
                 break;
             case 1: // High scores
                 // TODO!
@@ -116,9 +127,7 @@ void mainMenuDrawBackground(PastequeGameState* gameState, MainMenuData* data, Sc
 }
 
 void mainMenuDrawForeground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen) {
-
 }
 
 void mainMenuFinish(PastequeGameState* gameState, MainMenuData* data) {
-
 }

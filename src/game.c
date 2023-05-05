@@ -6,6 +6,8 @@
 #include "scene.h"
 #include "scenes/main_menu_scene.h"
 #include <ctype.h>
+#include <stdlib.h>
+#include <time.h>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -13,8 +15,10 @@
 // Called once at the very start
 void init(void* pUserData, Screen* pScreen) {
     PastequeGameState* gs = pUserData;
+
     initGameState(gs, pScreen);
     initColors();
+
     gsSwitchScene(gs, SN_MAIN_MENU, makeMainMenuData());
 }
 
@@ -36,6 +40,7 @@ void event(void* pUserData, Screen* pScreen, Event* pEvent) {
 // deltaTime is the time elapsed, in microseconds (1ms = 1000µs), between the previous frame and now
 int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
     PastequeGameState* gs = pUserData;
+
     gs->gameTime+=deltaTime;
 
     if (gs->quitRequested) {
@@ -50,6 +55,7 @@ int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
 // IMPORTANT: The screen isn't cleared automatically. Any leftover should be cleared manually.
 void draw(void* pUserData, Screen* pScreen) {
     PastequeGameState* gs = pUserData;
+
 #if USE_ERASE
     erase();
 #endif
@@ -71,12 +77,16 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
+    srand(time(NULL));
+    printf("Projet Pasteque launched!\n");
+
     Callbacks cb;
     cb.cbDraw = &draw;
     cb.cbEvent = &event;
     cb.cbUpdate = &update;
     cb.cbInit = &init;
     cb.cbFinish = &finish;
+
     PastequeGameState* gs = makeGameState();
     GameData* game = createGame(SCREEN_WIDTH, SCREEN_HEIGHT, gs, &cb, 1);
     gameLoop(game);

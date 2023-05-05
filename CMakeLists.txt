@@ -2,17 +2,26 @@ cmake_minimum_required(VERSION 3.7)
 project(projet_pasteque C)
 set(CMAKE_C_STANDARD 11)
 
+option(PASTEQUE_ENABLE_PROFILING "Enables profiling and debugging data" OFF)
+
 # Common functions
 function(add_common_compile_options target)
     if (MSVC)
         target_compile_options(${target} PRIVATE /D_CRT_SECURE_NO_WARNINGS /utf-8)
-    endif()
+        if (PASTEQUE_ENABLE_PROFILING)
+            target_link_options(${target} PRIVATE /PROFILE)
+        endif ()
+    else () # GCC/Clang
+        if (PASTEQUE_ENABLE_PROFILING)
+            target_compile_options(${target} PRIVATE -g)
+        endif ()
+    endif ()
 endfunction()
 
 # Sub-dependencies
 if (MSVC)
     add_subdirectory(external/pdcurses)
-endif()
+endif ()
 add_subdirectory(external/rgr)
 
 # When creating a new C file, make sure to add it to this list!

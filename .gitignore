@@ -187,3 +187,6 @@ build/
 # End of https://www.toptal.com/developers/gitignore/api/clion,cmake
 
 build-make/
+# VS Cruft
+.vs/
+CMakeSettings.json
