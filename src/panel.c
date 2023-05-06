@@ -104,50 +104,30 @@ void freePanelData(Panel* pPanel) {
     }
 }
 
-// The GameState used while drawing a panel, used for dirty pixels.
-// For convenience, this is global state because passing the GameState
-// for every panelDrawX function would be tedious. Or would require another struct
-// to be "concise".
-PastequeGameState* panelDrawGameState = NULL;
-
-// A helper function for above variable. Make sure to check panelDrawGameState before.
-bool registerFilledPixelUnsure(int x, int y) {
-    if (isWithinScreen(panelDrawGameState->screen, x, y)) {
-        // TODO: Remove this mechanism?
-#if !USE_ERASE
-        panelDrawGameState->curFilledPixels[y][x] = 1;
-#endif
-        return true;
-    }
-    return false;
-}
-
-// Same as registerFilledPixelUnsure, but now you're sure that the pixels exists!
-void registerFilledPixel(int x, int y) {
-    // TODO: Remove this mechanism?
-#if !USE_ERASE
-    panelDrawGameState->curFilledPixels[y][x] = 1;
-#endif
-}
-
 // An internal function for drawing the adornment
 void adornPanel(Panel* pPanel) {
     const PanelAdornment adornment = pPanel->adornment;
-    char* horizontal, * vertical, * topLeftCorner, * topRightCorner, * bottomLeftCorner, * bottomRightCorner;
+    char* horizontalB, * horizontalT, * verticalL, * verticalR,
+            * topLeftCorner, * topRightCorner, * bottomLeftCorner, * bottomRightCorner;
     if (adornment.style == PAS_SINGLE_BORDER) {
-        horizontal = "─";
-        vertical = "│";
+        horizontalB = horizontalT = "─";
+        verticalL = verticalR = "│";
         topLeftCorner = "┌";
         topRightCorner = "┐";
         bottomLeftCorner = "└";
         bottomRightCorner = "┘";
     } else if (adornment.style == PAS_DOUBLE_BORDER) {
-        horizontal = "═";
-        vertical = "║";
+        horizontalT = horizontalB = "═";
+        verticalL = verticalR = "║";
         topLeftCorner = "╔";
         topRightCorner = "╗";
         bottomLeftCorner = "╚";
         bottomRightCorner = "╝";
+    } else if (adornment.style == PAS_CLOSE_BORDER) {
+        horizontalT = topLeftCorner = topRightCorner = "▁";
+        horizontalB = bottomLeftCorner = bottomRightCorner = "▁";
+        verticalL = "▕";
+        verticalR = "▏";
     } else {
         return; // Goodbye!
     }
@@ -158,28 +138,26 @@ void adornPanel(Panel* pPanel) {
 
     // Draw the corners first.
     drawText(pPanel->pScreen, minX, minY, topLeftCorner, adornment.colorPair);
-    bool hasTopLeft = registerFilledPixelUnsure(minX, minY);
+    bool hasTopLeft = isWithinScreen(pPanel->pScreen, minX, minY);
     drawText(pPanel->pScreen, maxX, minY, topRightCorner, adornment.colorPair);
-    bool hasTopRight = registerFilledPixelUnsure(maxX, minY);
+    bool hasTopRight = isWithinScreen(pPanel->pScreen, maxX, minY);
     drawText(pPanel->pScreen, minX, maxY, bottomLeftCorner, adornment.colorPair);
-    bool hasBottomLeft = registerFilledPixelUnsure(minX, maxY);
+    bool hasBottomLeft = isWithinScreen(pPanel->pScreen, minX, maxY);
     drawText(pPanel->pScreen, maxX, maxY, bottomRightCorner, adornment.colorPair);
-    bool hasBottomRight = registerFilledPixelUnsure(maxX, maxY);
+    bool hasBottomRight = isWithinScreen(pPanel->pScreen, maxX, maxY);
 
     // Draw the horizontal lines, between the corners
     for (int offsetX = 0; offsetX < pPanel->width; ++offsetX) {
         int charX = pPanel->x + offsetX;
         // Top horizontal line exists
         if (hasTopLeft || hasTopRight) {
-            drawText(pPanel->pScreen, charX, minY, horizontal, adornment.colorPair);
-            registerFilledPixelUnsure(charX, minY);
+            drawText(pPanel->pScreen, charX, minY, horizontalT, adornment.colorPair);
         }
 
         // Bottom horizontal line exists
         if (hasBottomLeft || hasBottomRight) {
             int charY = pPanel->y + pPanel->height;
-            drawText(pPanel->pScreen, charX, charY, horizontal, adornment.colorPair);
-            registerFilledPixelUnsure(charX, charY);
+            drawText(pPanel->pScreen, charX, charY, horizontalB, adornment.colorPair);
         }
     }
 
@@ -188,15 +166,13 @@ void adornPanel(Panel* pPanel) {
         int charY = pPanel->y + offsetY;
         // Left vertical line exists
         if (hasTopLeft || hasBottomLeft) {
-            drawText(pPanel->pScreen, minX, charY, vertical, adornment.colorPair);
-            registerFilledPixelUnsure(minX, charY);
+            drawText(pPanel->pScreen, minX, charY, verticalL, adornment.colorPair);
         }
 
         // Right vertical line exists
         if (hasBottomLeft || hasBottomRight) {
             int charX = pPanel->x + pPanel->width;
-            drawText(pPanel->pScreen, charX, charY, vertical, adornment.colorPair);
-            registerFilledPixelUnsure(charX, charY);
+            drawText(pPanel->pScreen, charX, charY, verticalR, adornment.colorPair);
         }
     }
 }
@@ -206,12 +182,10 @@ void drawPanel(Panel* pPanel, PastequeGameState* pGameState) {
         RAGE_QUIT(210, "Panel is NULL.");
     }
     if (!isEmptyPanel(pPanel)) {
-        panelDrawGameState = pGameState;
         // Call the draw function so drawPanelX functions get called.
         pPanel->drawFunc(pPanel, pGameState, pPanel->pPanelData);
         // Then, adorn the panel, as the adornment can change inside the draw function.
         adornPanel(pPanel);
-        panelDrawGameState = NULL;
     }
 }
 
@@ -232,14 +206,6 @@ void panelDrawLine(Panel* pPanel, int x, int y, int w, char ch, int clrId) {
     int localY = pPanel->y + y;
 
     drawLine(pPanel->pScreen, localX, localY, w, ch, clrId);
-
-    // Register any filled pixels for dirty pixels detection.
-    if (panelDrawGameState) {
-        int finalX = localX + w; // Exclusive max
-        for (int curX = localX; curX < finalX; ++curX) {
-            registerFilledPixel(curX, localY);
-        }
-    }
 }
 
 void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId) {
@@ -270,14 +236,6 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId) {
     }
 
     drawText(pPanel->pScreen, localX, localY, pText, clrId);
-
-    // Register any filled pixels for dirty pixels detection.
-    if (panelDrawGameState) {
-        int finalX = localX + length; // Exclusive max
-        for (int curX = localX; curX < finalX; ++curX) {
-            registerFilledPixelUnsure(curX, localY);
-        }
-    }
 }
 
 void panelTranslate(Panel* pPanel, int x, int y) {

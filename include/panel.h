@@ -15,7 +15,8 @@
 typedef enum {
     PAS_NONE,
     PAS_SINGLE_BORDER,
-    PAS_DOUBLE_BORDER
+    PAS_DOUBLE_BORDER,
+    PAS_CLOSE_BORDER
 } PanelAdornmentStyle;
 
 /**

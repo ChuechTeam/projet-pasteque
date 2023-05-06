@@ -2,8 +2,7 @@
  * game_state.h
  * -------------
  * Contains the heart of the game. Everything that needs to persist through the entire game belongs
- * to this struct. Mainly, GameState contains the current scene the game is rendering.
- * GameState also manages rendering dirty pixels to avoid flickering.
+ * to this struct. Mainly, GameState contains the current scene the game is rendering, and the panels.
  */
 #ifndef PROJET_PASTEQUE_GAME_STATE_H
 #define PROJET_PASTEQUE_GAME_STATE_H
@@ -16,50 +15,118 @@
 // Those won't need to change dynamically. We can get some profit from that (2D arrays).
 #define SCREEN_WIDTH 96
 #define SCREEN_HEIGHT 54
-#define USE_ERASE 1
 
+/**
+ * The game state, containing all the panels and the current scene.
+ */
 typedef struct PastequeGameState_S {
+    // The amount of microseconds elapsed since the beginning of the game.
     unsigned long gameTime;
 
+    // The array containing all panels. By default, they are zeroed-out so they don't render.
     Panel panels[MAX_PANELS];
     // Convenience pointer to RGR Screen.
     Screen* screen;
+    // The name of the current scene
     SceneName currentScene;
+    // The scene data associated to that scene.
     void* currentSceneData;
+    // Whether the game should quit on the next frame.
     bool quitRequested;
-
-    // Previous/current filled pixels
-    // --------
-    // Those arrays are "screenshots" of all the pixels on a frame.
-    // Each pixel is either drawn (1) or cleared (0).
-    // Using those arrays, we can circumvent the issue of pixels that
-    // were drawn before, and now need to be cleared.
-    // TODO: Remove this? Is it useless now that erase() does the job easily?
-
-    // Value set to 1 if filled, 0 else.
-    // This could be optimized to be a bitset but COME ON this is already complex enough...
-    char prevFilledPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
-    char curFilledPixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 } PastequeGameState;
 
 /**
- * Allocates a new GameState.
+ * Allocates a new GameState. Must be cleared using free.
  * @return a fresh GameState
  */
 PastequeGameState* makeGameState();
+
+/**
+ * Initializes the GameState with a Screen from the RGR lib.
+ * @param pGameState the GameState to initialize
+ * @param pScreen the screen
+ */
 void initGameState(PastequeGameState* pGameState, Screen* pScreen);
 
+/**
+ * Adds a panel to the game, a drawable region of the screen.
+ *
+ * The created panel will have the given dimensions (x, y, width, height), and an optional
+ * adornment rendered outside the panel: use noneAdornment for having no adornment.
+ *
+ * The draw function (drawFunc) is called every frame to draw the contents of the panel,
+ * it cannot not be NULL. Inside, you can use panel draw functions such as panelDrawText.
+ *
+ * An optional panel data pointer (pPanelData) can be added to access additional data inside
+ * the draw function. By default, it is not freed once the panel is destroyed; this behavior
+ * can be changed by setting the freePanelDataOnDestroy attribute.
+ *
+ * The returned panel belongs to the GameState, and should *not* be freed. It is destroyed
+ * automatically when gsRemovePanel is called, or when we're switching to a new scene.
+ *
+ * Here's a typical example of using this function:
+ *
+ * @example @code
+ * void drawMyPanel(Panel* panel, PastequeGameState* gameState, void* data) {
+ *     panelDrawText(panel, 4, 6, "Hello world!", PASTEQUE_COLOR_WHITE);
+ * }
+ *
+ * void init(PastequeGameState* gameState) {
+ *     gsAddPanel(gameState, 0, 0, 20, 20, noneAdornment, &drawMyPanel, NULL);
+ * }
+ * @endcode
+ *
+ * @param pGameState the game state
+ * @param x the X coordinate of the panel
+ * @param y the Y coordinate of the panel
+ * @param width the width of the panel
+ * @param height the height of the panel
+ * @param adornment an optional adornment drawn outside the panel (use noneAdornment to disable it)
+ * @param drawFunc the draw function called when drawing the panel
+ * @param pPanelData an optional pointer to fuel some data into the draw function
+ * @return the panel, owned by the game state
+ */
 Panel* gsAddPanel(PastequeGameState* pGameState, int x, int y, int width, int height,
                PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData);
 
+/**
+ * Removes a panel from the game state.
+ * If a panel has already been removed, removing it twice won't have any effect.
+ * @param pGameState the game state
+ * @param panel the panel to remove
+ */
 void gsRemovePanel(PastequeGameState* pGameState, Panel* panel);
 
+/**
+ * Removes all present panels from the game state. Usually called when switching scenes.
+ * @param pGameState the game state
+ */
 void gsRemoveAllPanels(PastequeGameState* pGameState);
 
+/**
+ * Draws all panels contained in the game state, by calling the draw functions.
+ * Currently, the order in which draw functions are called is unstable.
+ * Therefore, overlapping panels is not recommended.
+ * @param pGameState the game state
+ */
 void gsDrawAllPanels(PastequeGameState* pGameState);
 
+/**
+ * Switches from a scene to another. The scene data must be created using a makeXData() function,
+ * and must correspond to the given scene name.
+ * This function shouldn't be called during draw functions. It is preferable to not run any code
+ * after calling this function (use return!).
+ *
+ * @param pGameState the game state
+ * @param newScene the name of the new scene
+ * @param newSceneData the scene data associated to that scene
+ */
 void gsSwitchScene(PastequeGameState* pGameState, SceneName newScene, void* newSceneData);
 
+/**
+ * Quits the game on the next frame. Also calls any sceneFinish functions.
+ * @param pGameState the game state
+ */
 void gsQuitGame(PastequeGameState* pGameState);
 
 #endif //PROJET_PASTEQUE_GAME_STATE_H

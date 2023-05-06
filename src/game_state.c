@@ -37,27 +37,9 @@ void gsRemovePanel(PastequeGameState* pGameState, Panel* panel) {
 }
 
 void gsDrawAllPanels(PastequeGameState* pGameState) {
-#if !USE_ERASE
-    // We're on the next frame. Transfer the current pixels to the previous pixels, and clear our current pixels.
-    memcpy(pGameState->prevFilledPixels, pGameState->curFilledPixels, sizeof(pGameState->curFilledPixels));
-    memset(pGameState->curFilledPixels, 0, sizeof(pGameState->curFilledPixels));
-#endif
     for (int i = 0; i < MAX_PANELS; ++i) {
         drawPanel(&pGameState->panels[i], pGameState);
     }
-#if !USE_ERASE
-    // Now, let's compare the pixels of the previous and current frame.
-    // If there's a pixel that was FILLED BEFORE and is NOW CLEARED, clear it manually.
-    for (int y = 0; y < SCREEN_HEIGHT; ++y) {
-        for (int x = 0; x < SCREEN_WIDTH; ++x) {
-            if (pGameState->prevFilledPixels[y][x] == 1 &&
-                pGameState->curFilledPixels[y][x] == 0) {
-                // Present before, now gone, REMOVE IT!
-                drawLine(pGameState->screen, x, y, 1, ' ', PASTEQUE_COLOR_BLANK);
-            }
-        }
-    }
-#endif
 }
 
 PastequeGameState* makeGameState() {

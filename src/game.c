@@ -8,8 +8,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+
 #ifdef _WIN32
+
 #include <Windows.h>
+
 #endif
 
 // Called once at the very start
@@ -30,7 +33,7 @@ void event(void* pUserData, Screen* pScreen, Event* pEvent) {
     // This conflicts with the usual uppercase characters we get.
     // And this also happens in Linux and this time I have no idea why!
     if (pEvent->code >= 'a' && pEvent->code <= 'z') {
-        pEvent->code = (KeyCode)toupper(pEvent->code);
+        pEvent->code = (KeyCode) toupper(pEvent->code);
     }
 
     sceneEvent(gs->currentScene, gs->currentSceneData, gs, pEvent);
@@ -41,7 +44,7 @@ void event(void* pUserData, Screen* pScreen, Event* pEvent) {
 int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
     PastequeGameState* gs = pUserData;
 
-    gs->gameTime+=deltaTime;
+    gs->gameTime += deltaTime;
 
     if (gs->quitRequested) {
         return 1; // Stop!
@@ -56,9 +59,7 @@ int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
 void draw(void* pUserData, Screen* pScreen) {
     PastequeGameState* gs = pUserData;
 
-#if USE_ERASE
     erase();
-#endif
     sceneDrawBackground(gs->currentScene, gs->currentSceneData, gs);
     gsDrawAllPanels(gs);
     sceneDrawForeground(gs->currentScene, gs->currentSceneData, gs);

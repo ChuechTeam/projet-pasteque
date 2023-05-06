@@ -76,6 +76,7 @@ void drawBoardPanel(Panel* panel, PastequeGameState* gameState, void* panelData)
         Point pos = cellPosition(data, c);
         ColorId color = pointsEqual(data->cursor, pos) && data->cursorEnabled ? PASTEQUE_COLOR_YELLOW_HIGHLIGHT
                                                                               : PASTEQUE_COLOR_WHITE;
+
         panelDrawLine(panel, 2 * pos.x, pos.y, 1, cell->ch, color);
     }
 }
