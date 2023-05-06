@@ -4,6 +4,7 @@
 #include "scenes/main_menu_scene.h"
 #include "colors.h"
 #include "scenes/crush_scene.h"
+#include "emoji.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -77,6 +78,12 @@ void drawQuitButtonPanel(Panel* panel, PastequeGameState* gameState, void* panel
     drawButtonGeneric(panel, "Quitter", 2, panelData);
 }
 
+void drawTestPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    for (int i = 0; i < panel->height; ++i) {
+        panelDrawLine(panel, 0, i, panel->width, (char)('A' + (char)panel->index), PASTEQUE_COLOR_WHITE);
+    }
+}
+
 // -----------------------------------------------
 // GAME LIFECYCLE FUNCTIONS
 // -----------------------------------------------
@@ -99,11 +106,14 @@ void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned l
 }
 
 void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEvent) {
-    if ((pEvent->code == KEY_ARROW_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
+    if (pEvent->code == KEY_MOUSE) {
+        debug("Mouse omg (x=%d, y=%d)\n", pEvent->mouseEvent.x, pEvent->mouseEvent.y);
+    }
+    if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
         // Select button on top
         data->focusedButtonIndex--;
     }
-    if ((pEvent->code == KEY_ARROW_DOWN || pEvent->code == KEY_S) && data->focusedButtonIndex < BUTTONS) {
+    if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && data->focusedButtonIndex < BUTTONS -1) {
         // Select button on bottom
         data->focusedButtonIndex++;
     }
@@ -111,7 +121,6 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         // Run the button action
         switch (data->focusedButtonIndex) {
             case 0: // Play
-                // TODO: Configurable size.
                 gsSwitchScene(gameState, SN_CRUSH, makeCrushData(12, 8, CIM_ALL));
                 break;
             case 1: // High scores

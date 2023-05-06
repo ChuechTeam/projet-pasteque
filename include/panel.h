@@ -60,6 +60,11 @@ typedef struct Panel_S {
      */
     int height;
     /**
+     * The layer of the Panel. Panels on a higher layer render later. Defaults to 0.
+     * Must be set using gsMovePanelLayer.
+     */
+    int layer;
+    /**
      * The style and color of the adornment drawn on the outside borner of the Panel.
      */
     PanelAdornment adornment;

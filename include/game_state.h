@@ -25,6 +25,9 @@ typedef struct PastequeGameState_S {
 
     // The array containing all panels. By default, they are zeroed-out so they don't render.
     Panel panels[MAX_PANELS];
+    // Contains pointers to the panels array, but sorted by the panel layer
+    // Empty panels are ignored.
+    Panel* panelsSorted[MAX_PANELS];
     // Convenience pointer to RGR Screen.
     Screen* screen;
     // The name of the current scene
@@ -90,6 +93,14 @@ Panel* gsAddPanel(PastequeGameState* pGameState, int x, int y, int width, int he
                PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData);
 
 /**
+ * Moves the given panel to another layer. Panels on higher layers render after other panels.
+ * @param pGameState the game state
+ * @param pPanel the panel whose layer will change
+ * @param newLayer the new layer of the panel
+ */
+void gsMovePanelLayer(PastequeGameState* pGameState, Panel* pPanel, int newLayer);
+
+/**
  * Removes a panel from the game state.
  * If a panel has already been removed, removing it twice won't have any effect.
  * @param pGameState the game state
@@ -105,8 +116,7 @@ void gsRemoveAllPanels(PastequeGameState* pGameState);
 
 /**
  * Draws all panels contained in the game state, by calling the draw functions.
- * Currently, the order in which draw functions are called is unstable.
- * Therefore, overlapping panels is not recommended.
+ * The drawing order is determined using the layers of the panels.
  * @param pGameState the game state
  */
 void gsDrawAllPanels(PastequeGameState* pGameState);

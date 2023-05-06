@@ -74,14 +74,29 @@ int checkEvent(GameData* pGame){
     
     // Get all key values from the stdin
     // Some keys generate several bytes
-    while( (ch=getch()) != ERR ){  
+    while( (ch=getch()) != ERR ){
+        // PASTEQUE MOD:
+        // This one is a bit weird. ncurses keypad() function seems to already translate
+        // all those complicated escape sequences for us. And it is required to enable keypad()
+        // to have mouse support in xterm (aka the terminal everyone seems to use?).
+        // So we can just roll with what getch() gives us and use the default ncurses key macros.
+#if USE_CURSES_KEYPAD
+        value = ch;
+        flag = 1;
+        size++;
+
+        // Fill the mouseEvent attribute in case of a mouse event.
+        if (ch == KEY_MOUSE) {
+            getmouse(&evt.mouseEvent);
+        }
+#else
         value = (value<<8) | ch;
         flag  = 0;
         size++;
         // ASCII flag
         flag |= (((size==1) && (value!=EXT_ESC)) || ((size==2) && (value!=EXT_CSI))) && (value>=0) && (value<=127);        
         // SPECIAL1 flag2
-        flag |= (size==2) && ((value & 0xFF00      ) == EXT_SPEC1);        
+        flag |= (size==2) && ((value & 0xFF00      ) == EXT_SPEC1);
         flag |= (size==2) && ((value & 0xFF00      ) == EXT_SPEC2);        
         // CSI flag
         flag |= (size==3) && ((value & 0xFFFF00    ) == EXT_CSI) && (value != HDR_FN1) && (value != HDR_FN2); 
@@ -91,7 +106,7 @@ int checkEvent(GameData* pGame){
         flag |= (size==5) && ((value & 0xFFFFFF00FF) == EXT_FN1); 
         flag |= (size==5) && ((value & 0xFFFFFF00FF) == EXT_FN2); 
         flag |= (size==2) && ((value & 0xFF00      ) == EXT_FN3);
-
+#endif
 // PASTEQUE MOD: This is annoying. So now it's a toggle.
 #if defined(ENABLE_KEYBOARD_DEBUG) && ENABLE_KEYBOARD_DEBUG
         //* // DEBUG
@@ -101,7 +116,7 @@ int checkEvent(GameData* pGame){
         } 
         // END DEBUG */
 #endif
-        
+
         // Send event to user code
         if( flag ){
             evt.code = value;

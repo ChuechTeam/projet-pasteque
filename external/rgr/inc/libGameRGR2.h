@@ -6,6 +6,14 @@
     // INCLUDES
     //------------------------------
     #include <locale.h>
+
+    // PASTEQUE MOD: Mouse support
+#ifndef USE_CURSES_KEYPAD
+#define USE_CURSES_KEYPAD 1
+#endif
+#ifdef _WIN32
+    #define NCURSES_MOUSE_VERSION 2
+#endif
     #include <curses.h>
     #include "keys.h"
 
@@ -22,6 +30,7 @@
     // Event structure
     typedef struct {
         KeyCode  code;
+        MEVENT mouseEvent;
     } Event;            
     // Canvas Structure
     typedef struct {

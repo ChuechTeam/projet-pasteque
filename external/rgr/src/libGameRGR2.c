@@ -64,7 +64,7 @@ GameData* createGame(int        nbCharX,
     pGame->pUserCallbacks = pCb;
     pGame->displayFPS     = fps;
 #if _WIN32
-    // Set up the timer for 60 FPS sync (Windows only)
+    // PASTEQUE MOD: Set up the timer for 60 FPS sync (Windows only)
     pGame->pWinTimer = CreateWaitableTimerEx(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
 #endif
     // return game structure
@@ -97,7 +97,12 @@ void gameLoop(GameData* pGame){
     noecho();
     curs_set(0);
     nodelay(pWin, TRUE);
-    
+    // PASTEQUE MOD: Mouse support
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    mouseinterval(0);
+#if USE_CURSES_KEYPAD
+    keypad(stdscr, TRUE);
+#endif
     init_pair(1, 7, 0);   
 
     // Call init here

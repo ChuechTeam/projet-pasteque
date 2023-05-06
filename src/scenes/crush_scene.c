@@ -110,13 +110,13 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
     const bool isArrows = (data->inputMethod & CIM_ARROWS_ENTER_CURSOR) != 0;
     const KeyCode code = pEvent->code;
 
-    if (isZQSD && code == KEY_Z || isArrows && code == KEY_ARROW_UP) {
+    if (isZQSD && code == KEY_Z || isArrows && code == KEY_UP) {
         moveCursorDelta(data, 0, -1);
-    } else if (isZQSD && code == KEY_S || isArrows && code == KEY_ARROW_DOWN) {
+    } else if (isZQSD && code == KEY_S || isArrows && code == KEY_DOWN) {
         moveCursorDelta(data, 0, 1);
-    } else if (isZQSD && code == KEY_Q || isArrows && code == KEY_ARROW_LEFT) {
+    } else if (isZQSD && code == KEY_Q || isArrows && code == KEY_LEFT) {
         moveCursorDelta(data, -1, 0);
-    } else if (isZQSD && code == KEY_D || isArrows && code == KEY_ARROW_RIGHT) {
+    } else if (isZQSD && code == KEY_D || isArrows && code == KEY_RIGHT) {
         moveCursorDelta(data, 1, 0);
     }
 }

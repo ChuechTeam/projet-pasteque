@@ -125,7 +125,7 @@ void adornPanel(Panel* pPanel) {
         bottomRightCorner = "╝";
     } else if (adornment.style == PAS_CLOSE_BORDER) {
         horizontalT = topLeftCorner = topRightCorner = "▁";
-        horizontalB = bottomLeftCorner = bottomRightCorner = "▁";
+        horizontalB = bottomLeftCorner = bottomRightCorner = "▔";
         verticalL = "▕";
         verticalR = "▏";
     } else {
