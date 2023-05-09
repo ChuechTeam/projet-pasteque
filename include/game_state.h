@@ -9,8 +9,8 @@
 #include "panel.h"
 #include "scene.h"
 
-// 16 panels should be enough. It's not like we're making a candy crush battle royale or something.
-#define MAX_PANELS 16
+// 32 panels should be enough. It's not like we're making a candy crush battle royale or something.
+#define MAX_PANELS 32
 
 // Those won't need to change dynamically. We can get some profit from that (2D arrays).
 #define SCREEN_WIDTH 96

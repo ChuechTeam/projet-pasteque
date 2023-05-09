@@ -5,10 +5,8 @@
 #include <malloc.h>
 #include "panel.h"
 #include "game_state.h"
-#include <stdbool.h>
 #include <string.h>
 #include "libGameRGR2.h"
-#include <stdlib.h>
 
 const PanelAdornment noneAdornment = {PAS_NONE, 0};
 const Panel emptyPanel = {0};
@@ -126,8 +124,8 @@ void adornPanel(Panel* pPanel) {
     } else if (adornment.style == PAS_CLOSE_BORDER) {
         horizontalT = topLeftCorner = topRightCorner = "▁";
         horizontalB = bottomLeftCorner = bottomRightCorner = "▔";
-        verticalL = "▕";
-        verticalR = "▏";
+        verticalL = "▏";
+        verticalR = "▕";
     } else {
         return; // Goodbye!
     }
@@ -246,4 +244,17 @@ void panelTranslate(Panel* pPanel, int x, int y) {
     }
     pPanel->x = x;
     pPanel->y = y;
+}
+
+bool panelContains(Panel* pPanel, int x, int y) {
+    int xMin = pPanel->x;
+    int xMax = pPanel->x + pPanel->width; // Exclusive
+    int yMin = pPanel->y;
+    int yMax = pPanel->y + pPanel->height; // Exclusive too
+
+    return xMin <= x && x < xMax && yMin <= y && y < yMax;
+}
+
+bool panelContainsMouse(Panel* pPanel, Event* pEvent) {
+    return panelContains(pPanel, pEvent->mouseEvent.x, pEvent->mouseEvent.y);
 }

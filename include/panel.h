@@ -8,6 +8,7 @@
 #define PROJET_PASTEQUE_PANEL_H
 
 #include "libGameRGR2.h"
+#include <stdbool.h>
 
 /**
  * A character style for adorning panels.
@@ -162,5 +163,22 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId);
  * @param y the Y coordinate
  */
 void panelTranslate(Panel* pPanel, int x, int y);
+
+/**
+ * Returns true if the panel contains the point (x, y), in screen space.
+ *
+ * @param pPanel the panel
+ * @param x the X coordinate of the point
+ * @param y the Y coordinate of the point
+ */
+bool panelContains(Panel* pPanel, int x, int y);
+
+/**
+ * Returns true if the mouse position is inside the panel.
+ *
+ * @param pPanel the panel
+ * @param pEvent the event containing mouse coordinates
+ */
+bool panelContainsMouse(Panel* pPanel, Event* pEvent);
 
 #endif //PROJET_PASTEQUE_PANEL_H

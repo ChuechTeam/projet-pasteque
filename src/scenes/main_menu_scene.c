@@ -1,10 +1,9 @@
 #include <malloc.h>
 #include <string.h>
-#include <stdlib.h>
 #include "scenes/main_menu_scene.h"
 #include "colors.h"
 #include "scenes/crush_scene.h"
-#include "emoji.h"
+#include "stdbool.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -78,12 +77,6 @@ void drawQuitButtonPanel(Panel* panel, PastequeGameState* gameState, void* panel
     drawButtonGeneric(panel, "Quitter", 2, panelData);
 }
 
-void drawTestPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
-    for (int i = 0; i < panel->height; ++i) {
-        panelDrawLine(panel, 0, i, panel->width, (char)('A' + (char)panel->index), PASTEQUE_COLOR_WHITE);
-    }
-}
-
 // -----------------------------------------------
 // GAME LIFECYCLE FUNCTIONS
 // -----------------------------------------------
@@ -106,18 +99,35 @@ void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned l
 }
 
 void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEvent) {
+    bool mouseClickedOnButton = false;
     if (pEvent->code == KEY_MOUSE) {
-        debug("Mouse omg (x=%d, y=%d)\n", pEvent->mouseEvent.x, pEvent->mouseEvent.y);
+        // Left click OR right click
+        if ((pEvent->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0) {
+            // Make sure we hit a button
+            if (panelContainsMouse(data->playButtonPanel, pEvent)) {
+                data->focusedButtonIndex = 0;
+                mouseClickedOnButton = true;
+            }
+            else if (panelContainsMouse(data->highScoresButtonPanel, pEvent)) {
+                data->focusedButtonIndex = 1;
+                mouseClickedOnButton = true;
+            }
+            else if (panelContainsMouse(data->playButtonPanel, pEvent)) {
+                data->focusedButtonIndex = 2;
+                mouseClickedOnButton = true;
+            }
+        }
     }
-    if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
+    else if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
         // Select button on top
         data->focusedButtonIndex--;
     }
-    if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && data->focusedButtonIndex < BUTTONS -1) {
+    else if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && data->focusedButtonIndex < BUTTONS -1) {
         // Select button on bottom
         data->focusedButtonIndex++;
     }
-    if (pEvent->code == KEY_RETURN) {
+
+    if (pEvent->code == KEY_RETURN || mouseClickedOnButton) {
         // Run the button action
         switch (data->focusedButtonIndex) {
             case 0: // Play
