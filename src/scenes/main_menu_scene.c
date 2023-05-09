@@ -112,7 +112,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
                 data->focusedButtonIndex = 1;
                 mouseClickedOnButton = true;
             }
-            else if (panelContainsMouse(data->playButtonPanel, pEvent)) {
+            else if (panelContainsMouse(data->quitButtonPanel, pEvent)) {
                 data->focusedButtonIndex = 2;
                 mouseClickedOnButton = true;
             }
