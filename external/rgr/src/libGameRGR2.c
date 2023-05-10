@@ -100,6 +100,12 @@ void gameLoop(GameData* pGame){
     // PASTEQUE MOD: Mouse support
     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     mouseinterval(0);
+    // Enable all mouse events for using XTerm control sequences.
+    // This solution works for some terminals, but not all of them.
+    // TODO: Override the TERM env with a modded terminfo with both 256color and 1003.
+    // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Mouse-Tracking
+    printf("\033[?1003h");
+    fflush(stdout);
 #if USE_CURSES_KEYPAD
     keypad(stdscr, TRUE);
 #endif

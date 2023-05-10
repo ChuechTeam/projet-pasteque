@@ -190,3 +190,4 @@ build-make/
 # VS Cruft
 .vs/
 CMakeSettings.json
+.vscode/

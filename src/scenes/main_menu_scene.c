@@ -102,20 +102,21 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
     bool mouseClickedOnButton = false;
     if (pEvent->code == KEY_MOUSE) {
         // Left click OR right click
-        if ((pEvent->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0) {
-            // Make sure we hit a button
-            if (panelContainsMouse(data->playButtonPanel, pEvent)) {
-                data->focusedButtonIndex = 0;
-                mouseClickedOnButton = true;
-            }
-            else if (panelContainsMouse(data->highScoresButtonPanel, pEvent)) {
-                data->focusedButtonIndex = 1;
-                mouseClickedOnButton = true;
-            }
-            else if (panelContainsMouse(data->quitButtonPanel, pEvent)) {
-                data->focusedButtonIndex = 2;
-                mouseClickedOnButton = true;
-            }
+        bool isMouseClick = (pEvent->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0;
+        
+        // Highlight the button when the cursor goes over it.
+        // Run the button action when the user does a left/right click.
+        if (panelContainsMouse(data->playButtonPanel, pEvent)) {
+            data->focusedButtonIndex = 0;
+            mouseClickedOnButton = isMouseClick;
+        }
+        else if (panelContainsMouse(data->highScoresButtonPanel, pEvent)) {
+            data->focusedButtonIndex = 1;
+            mouseClickedOnButton = isMouseClick;
+        }
+        else if (panelContainsMouse(data->quitButtonPanel, pEvent)) {
+            data->focusedButtonIndex = 2;
+            mouseClickedOnButton = isMouseClick;
         }
     }
     else if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
