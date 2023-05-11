@@ -179,20 +179,25 @@ void play(matrice tab, Coos *coordonnees, int *score){
     int lenght = 1;
     int flag = 1;
     int n = 0;
+    int col = TAILLE-1;
     //Check for lines
     //Checks bacwards and if stops go fwd
     /*for (int i = 0; i < TAILLE; i++){
-        for (int j = 0; j < TAILLE; j++){
-            if(flag){
-                if(tab[i][0]==tab[i][TAILLE-1-j]){
-                    lenght++;
-                }
-                else{
-
-                }
-            }
+        while (tab[i][0]==tab[i][col]){
+            lenght ++;
+            col--;
         }
-    }*/
+        for (int j = 0; j<col; j++){
+            if (tab[i][j]==tab[i][j+1]){
+                lenght++;
+                flag
+            }
+            
+        }
+        
+        
+    }
+    */
     for (int i = 0; i < TAILLE; i++){
         for (int j = 0; j < TAILLE-1; j++){
             flag = 1;
