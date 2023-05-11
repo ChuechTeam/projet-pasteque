@@ -18,7 +18,7 @@ void insertion(Coos *tab, int n){
     for (etape = 1; etape< n; etape++){
         temp = tab[etape];
         decal=etape-1;
-        while (decal>=0 && tab[decal].y>temp.y){
+        while (decal>=0 && tab[decal].y<temp.y){
             tab[decal+1]=tab[decal];
             decal--;
         }
@@ -130,15 +130,15 @@ void tri_coo(Coos *tab,int n){
 }
 
 void destroy(matrice tab, int i, int j){ //replaces all tiles above the destoyed tiles
-    for(i; i>0 ;i--){
-        tab[i][j]=tab[i-1][j];
+    for(i; i<TAILLE-1 ;i++){
+        tab[i][j]=tab[i+1][j];
     }
-    tab[0][j] = fill(); //creates a new tiles at the top
+    tab[TAILLE-1][j] = fill(); //creates a new tile at the bottom
 }
 
 void board_destroy(matrice tab, int n, Coos *cord){
     for (int i = 0; i < n; i++){
-        destroy(tab,cord[i].y,cord[i].y);
+        destroy(tab,cord[i].y,cord[i].x);
     }
     
 }
@@ -180,6 +180,19 @@ void play(matrice tab, Coos *coordonnees, int *score){
     int flag = 1;
     int n = 0;
     //Check for lines
+    //Checks bacwards and if stops go fwd
+    /*for (int i = 0; i < TAILLE; i++){
+        for (int j = 0; j < TAILLE; j++){
+            if(flag){
+                if(tab[i][0]==tab[i][TAILLE-1-j]){
+                    lenght++;
+                }
+                else{
+
+                }
+            }
+        }
+    }*/
     for (int i = 0; i < TAILLE; i++){
         for (int j = 0; j < TAILLE-1; j++){
             flag = 1;
@@ -229,6 +242,7 @@ void play(matrice tab, Coos *coordonnees, int *score){
         }
         lenght = 1;
     }
+    
     //check for colums
     for (int j = 0; j < TAILLE; j++){
         for (int i = 0; i < TAILLE-1; i++){
@@ -281,7 +295,8 @@ void play(matrice tab, Coos *coordonnees, int *score){
         lenght = 1;
     }
     insertion(coordonnees,n);
-    //board_destroy();
+    //clignote(tab, coos, n) (to be done) 
+    board_destroy(tab, n, coordonnees);
 }
 
 void start(matrice tab){ // Initializes the board so 3 symbols are not connected
@@ -306,9 +321,9 @@ int main() {
     char tableau[TAILLE][TAILLE];
     Coos *coordonnees = malloc(sizeof(Coos)*TAILLE*TAILLE);
     ini(tableau);
+    boardprint(tableau,score);
     play(tableau,coordonnees, pscore);
     score = 0; //score during the steup obviously won't count towards the player's score
     boardprint(tableau,score);
-    printArray(coordonnees);
     return 0;
 }
