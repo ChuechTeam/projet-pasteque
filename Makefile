@@ -10,8 +10,8 @@ OUT = build-make
 INCLUDE_DIRS = include external/rgr/inc
 INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 # Add any library here
-LIBRARIES = GameRGR2 ncursesw
-LIBRARIES_FLAGS = $(addprefix -l, $(LIBRARIES))
+LDLIBS = GameRGR2 ncursesw
+LDFLAGS += $(addprefix -l, $(LDLIBS))
 LIBRARY_PATHS = external/rgr/lib
 # This is for LD_LIBRARY_PATH. Add the : infix if we have multiple libraries.
 LIBRARY_PATHS_ENV = external/rgr/lib
@@ -32,13 +32,13 @@ make_build_dir:
 # The default rule for all object files.
 $(OUT)/%.o: src/%.c $(INCLUDE_FILES_FP) external/rgr/lib/libGameRGR2.so | make_build_dir
 	@echo "Compiling $<..."
-	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $(LIBRARY_PATHS_FLAGS) -c $< -o $@ $(LIBRARIES_FLAGS)
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $(LIBRARY_PATHS_FLAGS) -c $< -o $@ $(LDFLAGS)
 
 $(OUT)/projet_pasteque: $(OBJ_FILES_FP) 
 	@echo "Linking executable..."
 	@# It's necessary to have library flags at the end of the command for the linker to resolve
 	@# dependencies correctly. Weird behavior. But it works.
-	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $(LIBRARY_PATHS_FLAGS)  $^ -o $@ $(LIBRARIES_FLAGS)
+	@$(CC) $(CFLAGS) $(INCLUDE_FLAGS) $(LIBRARY_PATHS_FLAGS)  $^ -o $@ $(LDFLAGS)
 
 external/rgr/lib/libGameRGR2.so:
 	@echo "Compiling library GameRGR2..."
@@ -49,7 +49,7 @@ build: $(OUT)/projet_pasteque
 
 .PHONY: run
 run: build
-	@LD_LIBRARY_PATH=$(LIBRARY_PATHS_ENV) ./$(OUT)/projet_pasteque
+	LD_LIBRARY_PATH="$(LIBRARY_PATHS_ENV)" ./$(OUT)/projet_pasteque
 
 .PHONY: clean
 clean:
