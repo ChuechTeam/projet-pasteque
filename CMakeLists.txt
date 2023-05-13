@@ -19,7 +19,7 @@ function(add_common_compile_options target)
 endfunction()
 
 # Sub-dependencies
-if (MSVC)
+if (WIN32)
     add_subdirectory(external/pdcurses)
 endif ()
 add_subdirectory(external/rgr)

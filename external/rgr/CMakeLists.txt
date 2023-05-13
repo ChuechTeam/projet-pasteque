@@ -4,7 +4,7 @@ target_include_directories(GameRGR2 PUBLIC
         $<INSTALL_INTERFACE:inc/>)
 
 add_common_compile_options(GameRGR2)
-if (MSVC)
+if (WIN32)
     target_link_libraries(GameRGR2 PUBLIC PDCurses)
 else ()
     find_library(NCURSES_LIB NAMES "ncursesw")
