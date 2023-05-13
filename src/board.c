@@ -31,7 +31,7 @@ CrushBoard* makeCrushBoard(int width, int height, char symbols) {
     // data->cells has already been initialized since we've allocated enough space using malloc.
 
     // Fill with random values
-    fillBoardRandom(board, 5);
+    fillBoardRandom(board, symbols);
     return board;
 }
 
