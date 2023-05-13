@@ -132,7 +132,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         // Run the button action
         switch (data->focusedButtonIndex) {
             case 0: // Play
-                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(12, 8, CIM_ALL));
+                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(12, 8, 4, CIM_ALL));
                 break;
             case 1: // High scores
                 // TODO!

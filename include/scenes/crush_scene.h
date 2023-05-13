@@ -23,7 +23,7 @@ struct CrushData_S; // Defined in crush_scene.c
 typedef struct CrushData_S CrushData;
 
 // TODO: Multiple players? Custom input method?
-CrushData* makeCrushData(int width, int height, CrushInputMethod inputMethod);
+CrushData* makeCrushData(int width, int height, char symbols, CrushInputMethod inputMethod);
 
 void crushInit(PastequeGameState* gameState, CrushData* data);
 

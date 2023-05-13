@@ -1,9 +1,21 @@
 #include "colors.h"
 
 void initColors() {
-    setColorPair(1, COLOR_WHITE, COLOR_BLACK);
-    setColorPair(2, COLOR_BLACK, COLOR_WHITE);
+    setColorPair(PASTEQUE_COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
+    setColorPair(PASTEQUE_COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
     setColor(COLOR_YELLOW, 255, 241, 80);
-    setColorPair(3, COLOR_BLACK, COLOR_YELLOW);
-    setColorPair(8, COLOR_BLACK, COLOR_BLACK);
+    setColorPair(PASTEQUE_COLOR_YELLOW_HIGHLIGHT_BG, COLOR_BLACK, COLOR_YELLOW);
+    setColorPair(PASTEQUE_COLOR_BLANK, COLOR_BLACK, COLOR_BLACK);
+
+    setColor(COLOR_BLUE, 0, 114, 255);
+    setColorPair(PASTEQUE_COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
+
+    setColor(9, 213, 147, 20);
+    setColorPair(PASTEQUE_COLOR_YELLOW_FOCUS_BG, COLOR_BLACK, 9);
+
+    setColor(10, 255, 65, 65);
+    setColorPair(PASTEQUE_COLOR_RED_BLINK1_BG, COLOR_WHITE, 10);
+
+    setColor(11, 255, 134, 134);
+    setColorPair(PASTEQUE_COLOR_RED_BLINK2_BG, COLOR_BLACK, 11);
 }

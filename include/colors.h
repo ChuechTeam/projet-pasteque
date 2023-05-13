@@ -12,8 +12,14 @@ typedef int ColorId;
 
 #define PASTEQUE_COLOR_WHITE 1
 #define PASTEQUE_COLOR_BLACK 2
-#define PASTEQUE_COLOR_YELLOW_HIGHLIGHT 3
+#define PASTEQUE_COLOR_YELLOW_HIGHLIGHT_BG 3
+#define PASTEQUE_COLOR_BLUE 4
 #define PASTEQUE_COLOR_BLANK 8
+
+#define PASTEQUE_COLOR_YELLOW_FOCUS_BG 9
+#define PASTEQUE_COLOR_RED_BLINK1_BG 10
+#define PASTEQUE_COLOR_RED_BLINK2_BG 11
+
 
 /**
  * Initializes all the color and color pairs. Must be called in init.
