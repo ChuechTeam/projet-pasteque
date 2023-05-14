@@ -1,51 +1,51 @@
 #include "colors.h"
 
-void initTextColor(int id, int r, int g, int b) {
-    setColor(id, r, g, b);
-    setColorPair(id, id, COLOR_BLACK);
+void initTextColor(int id, int color) {
+    setColorPair(id, color, COLOR_BLACK);
 }
 
-void initBGColorWhite(int id, int r, int g, int b) {
-    setColor(id, r, g, b);
-    setColorPair(id, COLOR_WHITE, id);
+void initBGColorWhite(int id, int color) {
+    setColorPair(id, COLOR_WHITE, color);
 }
 
-void initBGColorBlack(int id, int r, int g, int b) {
-    setColor(id, r, g, b);
-    setColorPair(id, COLOR_BLACK, id);
+void initBGColorBlack(int id, int color) {
+    setColorPair(id, COLOR_BLACK, color);
 }
 
 void initColors() {
+    // See https://www.ditig.com/256-colors-cheat-sheet
     setColor(COLOR_WHITE, 255, 255, 255);
     setColor(COLOR_BLACK, 0, 0, 0);
     setColorPair(PASTEQUE_COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
     setColorPair(PASTEQUE_COLOR_BLACK, COLOR_BLACK, COLOR_WHITE);
 
-    initTextColor(PASTEQUE_COLOR_YELLOW, 255, 241, 80);
+    // Replace yellow with a more vivid color for terminals that support it.
+    setColor(184, 252, 255, 30);
+    initTextColor(PASTEQUE_COLOR_YELLOW, 184);
 
     setColorPair(PASTEQUE_COLOR_BLANK, COLOR_BLACK, COLOR_BLACK);
 
-    initTextColor(PASTEQUE_COLOR_BLUE, 0, 114, 255);
+    initTextColor(PASTEQUE_COLOR_BLUE, 33);
 
-    initTextColor(PASTEQUE_COLOR_RED, 255, 51, 36);
+    initTextColor(PASTEQUE_COLOR_RED, 160);
 
-    initTextColor(PASTEQUE_COLOR_ORANGE, 253, 158, 22);
+    initTextColor(PASTEQUE_COLOR_ORANGE, 208);
 
-    initTextColor(PASTEQUE_COLOR_GREEN, 34, 255, 60);
+    initTextColor(PASTEQUE_COLOR_GREEN, 155);
 
-    initTextColor(PASTEQUE_COLOR_TOMATO, 255, 112, 49);
+    initTextColor(PASTEQUE_COLOR_TOMATO, 202);
 
-    initTextColor(PASTEQUE_COLOR_FUSCHIA, 255, 49, 238);
+    initTextColor(PASTEQUE_COLOR_FUSCHIA, 165);
 
-    initTextColor(PASTEQUE_COLOR_TURQUOISE, 47, 255, 218);
+    initTextColor(PASTEQUE_COLOR_TURQUOISE, 45);
 
     setColorPair(PASTEQUE_COLOR_YELLOW_HIGHLIGHT_BG, COLOR_BLACK, COLOR_YELLOW);
 
-    initBGColorBlack(PASTEQUE_COLOR_YELLOW_FOCUS_BG, 213, 147, 20);
+    initBGColorBlack(PASTEQUE_COLOR_YELLOW_FOCUS_BG, 202);
 
-    initBGColorWhite(PASTEQUE_COLOR_RED_BLINK1_BG, 255, 65, 65);
+    initBGColorWhite(PASTEQUE_COLOR_RED_BLINK1_BG, 204);
 
-    initBGColorBlack(PASTEQUE_COLOR_RED_BLINK2_BG, 255, 134, 134);
+    initBGColorBlack(PASTEQUE_COLOR_RED_BLINK2_BG, 196);
 
     setColorPair(PASTEQUE_COLOR_BLUE_ON_WHITE, PASTEQUE_COLOR_BLUE, COLOR_WHITE);
 }
