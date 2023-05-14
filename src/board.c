@@ -84,12 +84,13 @@ void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char addition
     int numForbiddenSymbols = 0;
 
     // Check if we have two consecutive symbols in the horizontal line behind.
-    if (x > 0 && lineContinues(board, x - 1, y, -1, 0)) {
+    if (x > 1 && lineContinues(board, x - 1, y, -1, 0)) {
         forbiddenSymbol1 = CELL(board, x - 1, y).sym;
         numForbiddenSymbols++;
     }
+
     // Check if we have two consecutive symbols in the vertical line above.
-    if (y > 0 && lineContinues(board, x, y - 1, 0, -1)) {
+    if (y > 1 && lineContinues(board, x, y - 1, 0, -1)) {
         forbiddenSymbol2 = CELL(board, x, y - 1).sym;
         numForbiddenSymbols++;
     }
@@ -111,7 +112,7 @@ void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char addition
 
     // Check if we have a symbol that might induce a vertical crossing line.
     // Cases are same as for horizontal, but vertical, you get it.
-    if (y == board->height - 1 && forbiddenSymbol4 == 0) {
+    if (y == board->height - 1) {
         CrushCell firstCell = CELL(board, x, 0);
         CrushCell prevCell = CELL(board, x, y - 1);
 
@@ -135,8 +136,7 @@ void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char addition
         // Restart the current function.
         fillCellRandom(board, symbols, x, y, 0);
         return;
-    }
-    else {
+    } else {
         // We have forbidden symbols. Prepare a pool of symbols to get true randomness.
         const int poolSize = symbols - numForbiddenSymbols;
         char symbolPool[MAX_SYMBOLS];
@@ -213,31 +213,22 @@ int points(int length) {
     switch (length) {
         case 3:
             return 300;
-            break;
         case 4:
             return 450;
-            break;
         case 5:
             return 650;
-            break;
         case 6:
             return 900;
-            break;
         case 7:
             return 1500;
-            break;
         case 8:
             return 2500;
-            break;
         case 9:
             return 4000;
-            break;
         case 10:
             return 10000;
-            break;
         default:
-            return 0;
-            break;
+            return 20000 * length;
     }
 }
 
@@ -269,34 +260,6 @@ bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY) {
 
     return cur.sym == next.sym;
 }
-
-// Maybe useful if the rules change? idk
-//bool findHorizLineBounds(CrushBoard* board, int y,
-//                         CrushCell** outFirstCellPtr, CrushCell** outLastCellPtr,
-//                         int* outFirstX, int* outLastX) {
-//
-//    bool cellFound = false;
-//
-//    for (int x = 0; x < board->width; ++x) {
-//        CrushCell* first = &CELL(board, x, y);
-//        if (first->kind != 0) {
-//            *outFirstCellPtr = first;
-//            *outFirstX = x;
-//            cellFound = true;
-//        }
-//    }
-//
-//    for (int x = board->width - 1; x >= 0; ++x) {
-//        CrushCell* last = &CELL(board, x, y);
-//        if (last->kind != 0) {
-//            *outLastCellPtr = last;
-//            *outLastX = x;
-//            cellFound = true;
-//        }
-//    }
-//
-//    return cellFound;
-//}
 
 bool boardMarkAlignedCells(CrushBoard* board, int* score) {
     if (board == NULL) {
@@ -448,6 +411,69 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
     return prevScore != *score;
 }
 
+// Returns true when replacing the given cell is within a line.
+bool cellWithinLine(CrushBoard* board, Point position) {
+    if (board == NULL) {
+        RAGE_QUIT(2002, "Crush board is NULL.");
+    }
+    if (!boardContainsPos(board, position)) {
+        RAGE_QUIT(2005, "Position out of crush board.");
+    }
+
+    int x = position.x;
+    int y = position.y;
+    // Initialize both to 1 as the symbol already counts in the search.
+    int horizLength = 1;
+    int vertLength = 1;
+
+    char symbol = CELL(board, x, y).sym;
+
+    // Check for horizontal lines, we only need to check for 3 consecutive symbols.
+    // We use the LP (Loop back) macro, so we can search for lines crossing the screen borders,
+    // such as A B B A A.
+
+    // Search left
+    if (CELL_LP(board, x - 1, y).sym == symbol) {
+        horizLength++;
+        if (CELL_LP(board, x - 2, y).sym == symbol) {
+            horizLength++;
+        }
+    }
+
+    // Search right
+    if (CELL_LP(board, x + 1, y).sym == symbol) {
+        horizLength++;
+        if (CELL_LP(board, x + 2, y).sym == symbol) {
+            horizLength++;
+        }
+    }
+    if (horizLength >= 3) {
+        return true;
+    }
+
+    // Now check for vertical lines
+    // Search up
+    if (CELL_LP(board, x, y - 1).sym == symbol) {
+        vertLength++;
+        if (CELL_LP(board, x, y - 2).sym == symbol) {
+            vertLength++;
+        }
+    }
+
+    // Search down
+    if (CELL_LP(board, x, y + 1).sym == symbol) {
+        vertLength++;
+        if (CELL_LP(board, x, y + 2).sym == symbol) {
+            vertLength++;
+        }
+    }
+    if (vertLength >= 3) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 Point boardCellIndexToPos(CrushBoard* board, int index) {
     if (board == NULL) {
         RAGE_QUIT(2002, "Crush board is NULL.");
@@ -486,21 +512,64 @@ void boardGetNeighbors(CrushBoard* board, Point cell, Point* neighbors, int* n) 
     }
 }
 
-bool boardSwapCells(CrushBoard* board, Point cellA, Point cellB) {
+SwapResult boardSwapCells(CrushBoard* board, Point posA, Point posB, bool alwaysRevert) {
     if (board == NULL) {
         RAGE_QUIT(2002, "Crush board is NULL.");
     }
 
     // Make sure the cells are inside the board.
-    if (!boardContainsPos(board, cellA) || !boardContainsPos(board, cellB) || pointsEqual(cellA, cellB)) {
-        return false;
-    }
     // We won't validate adjacency for now.
-    // TODO: If swapping won't match 3, don't.
+    if (!boardContainsPos(board, posA) || !boardContainsPos(board, posB) || pointsEqual(posA, posB)) {
+        return SR_OUT_OF_BOUNDS;
+    }
 
-    CrushCell temp = CELL_PT(board, cellA);
-    CELL_PT(board, cellA).sym = CELL_PT(board, cellB).sym;
-    CELL_PT(board, cellB).sym = temp.sym;
+    CrushCell cellA = CELL_PT(board, posA);
+    CrushCell cellB = CELL_PT(board, posB);
 
-    return true;
+    // Disallow swapping empty cells.
+    if (cellA.sym == 0 || cellB.sym == 0) {
+        return SR_EMPTY_CELLS;
+    }
+
+    // Swap the cells (can be reverted later)
+    CELL_PT(board, posA).sym = cellB.sym;
+    CELL_PT(board, posB).sym = cellA.sym;
+
+    // Keep the swap when it actually does a match.
+    bool swapSuccessful = cellWithinLine(board, posA) || cellWithinLine(board, posB);
+    if (!swapSuccessful || alwaysRevert) {
+        // The swap is invalid (or we always want to revert), revert changes.
+        CELL_PT(board, posA).sym = cellA.sym;
+        CELL_PT(board, posB).sym = cellB.sym;
+    }
+
+    return swapSuccessful ? SR_SUCCESS : SR_NO_MATCH;
+}
+
+bool boardAnySwapPossible(CrushBoard* board) {
+    // Test all left to right swaps, and top to bottom swaps.
+    // Regarding complexity, this function can be really costly: O(WxH)!
+    // No need to worry though, since the worst case (no swaps at all) happens
+    // when we have a low amount of non-empty cells.
+
+    for (int y = 0; y < board->height; ++y) {
+        for (int x = 0; x < board->width; ++x) {
+            // Left to right swap
+            if (x != board->width - 1) {
+                // Use the true parameter in alwaysRevert to not actually swap the cells
+                if (boardSwapCells(board, (Point){x, y}, (Point){x + 1, y}, true) == SR_SUCCESS) {
+                    return true;
+                }
+            }
+            // Top to bottom swap
+            if (y != board->height - 1) {
+                if (boardSwapCells(board, (Point){x, y}, (Point){x, y+1}, true) == SR_SUCCESS) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // No swap found at all.
+    return false;
 }

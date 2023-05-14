@@ -2,28 +2,36 @@
 #include <stdlib.h>
 #include "colors.h"
 #include <stdbool.h>
+#include <string.h>
 #include "board.h"
+#include <limits.h>
 
 #define MILLI_IN_MICROS 1000L
-#define BLINKING_DURATION_MICROS (1000L*MILLI_IN_MICROS)
-#define GRAVITY_PERIOD_MICROS (200L*MILLI_IN_MICROS)
+#define MICROS(millis) (millis*MILLI_IN_MICROS)
+#define BLINKING_DURATION_MICROS MICROS(1000L)
+#define GRAVITY_PERIOD_MICROS MICROS(200L)
 
 typedef enum {
     CPS_WAITING_INPUT,
     CPS_EVALUATING_BOARD,
     CPS_BLINKING,
-    CPS_GRAVITY
+    CPS_GRAVITY,
+    CPS_GAME_OVER
 } CrushPlayState;
 
 struct CrushData_S {
+    // GAME STATE
     int score;
     CrushBoard* board;
-    Panel* boardPanel;
-    Panel* scorePanel;
-
     CrushPlayState playState;
     unsigned long animTimeMicros;
 
+    // MESSAGES
+    char message[128];
+    ColorId messageColor;
+    long messageDurationMicros;
+
+    // INPUT
     Point cursor;
     // True when the cursor focuses on a cell to swap with another.
     bool cursorSwapping;
@@ -31,6 +39,11 @@ struct CrushData_S {
     Point swapNeighbors[4];
     int numSwapNeighbors;
     CrushInputMethod inputMethod;
+
+    // PANELS
+    Panel* boardPanel;
+    Panel* scorePanel;
+    Panel* messagePanel;
 };
 
 CrushData* makeCrushData(int width, int height, char symbols, CrushInputMethod inputMethod) {
@@ -42,27 +55,37 @@ CrushData* makeCrushData(int width, int height, char symbols, CrushInputMethod i
     // This will validate width, height, and the symbols.
     data->board = makeCrushBoard(width, height, symbols);
     data->inputMethod = inputMethod;
+    data->message[0] = '\0';
+    data->messageColor = PASTEQUE_COLOR_WHITE;
     return data;
 }
 
-char* cellToStr(CrushCell cell) {
+char* cellToStr(CrushCell cell, ColorId* outColor) {
     // Can be adjusted for a different theme, etc.
     switch (cell.sym) {
         case 0:
+            *outColor = PASTEQUE_COLOR_WHITE;
             return " ";
         case 1:
+            *outColor = PASTEQUE_COLOR_GREEN;
             return "O";
         case 2:
+            *outColor = PASTEQUE_COLOR_BLUE;
             return "&";
         case 3:
+            *outColor = PASTEQUE_COLOR_TOMATO;
             return "#";
         case 4:
+            *outColor = PASTEQUE_COLOR_YELLOW;
             return "$";
         case 5:
+            *outColor = PASTEQUE_COLOR_FUSCHIA;
             return "@";
         case 6:
+            *outColor = PASTEQUE_COLOR_TURQUOISE;
             return "%";
         default:
+            *outColor = PASTEQUE_COLOR_WHITE;
             return "?";
     }
 }
@@ -74,11 +97,14 @@ void drawBoardPanel(Panel* panel, PastequeGameState* gameState, void* panelData)
         CrushCell cell = board->cells[c];
         Point pos = boardCellIndexToPos(data->board, c);
 
-        ColorId color = PASTEQUE_COLOR_WHITE;
+        ColorId color;
+        char* cellStr = cellToStr(cell, &color);
+
+        // Override the colors in some situations
         if (cell.highlightedNeighbor) {
             color = PASTEQUE_COLOR_YELLOW_HIGHLIGHT_BG;
         } else if (cell.markedForDestruction && data->playState == CPS_BLINKING) {
-            color = (gameState->gameTime % (200 * MILLI_IN_MICROS)) < (100 * MILLI_IN_MICROS) ?
+            color = (gameState->gameTime % MICROS(200)) < MICROS(100) ?
                     PASTEQUE_COLOR_RED_BLINK1_BG :
                     PASTEQUE_COLOR_RED_BLINK2_BG;
         } else if (pointsEqual(data->cursor, pos)) {
@@ -89,7 +115,7 @@ void drawBoardPanel(Panel* panel, PastequeGameState* gameState, void* panelData)
             }
         }
 
-        panelDrawText(panel, 2 * pos.x, pos.y, cellToStr(cell), color);
+        panelDrawText(panel, 2 * pos.x, pos.y, cellStr, color);
     }
 }
 
@@ -100,6 +126,20 @@ void drawScorePanel(Panel* panel, PastequeGameState* gameState, void* panelData)
     sprintf(buffer, "Score : %d", data->score);
 
     panelDrawText(panel, 0, 0, buffer, PASTEQUE_COLOR_BLUE);
+}
+
+void drawMessagePanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    CrushData* data = panelData;
+
+    if (data->messageDurationMicros > 0) {
+        panelDrawText(panel, 0, 0, data->message, data->messageColor);
+    }
+}
+
+void displayMessage(CrushData* data, const char* str, ColorId color, long durationMicros) {
+    strncpy(data->message, str, 128);
+    data->messageColor = color;
+    data->messageDurationMicros = durationMicros;
 }
 
 void moveCursorDelta(CrushBoard* board, Point* cursor, int deltaX, int deltaY) {
@@ -126,7 +166,6 @@ void toggleCursorSwapping(CrushData* data) {
         for (int i = 0; i < data->numSwapNeighbors; ++i) {
             CELL_PT(data->board, data->swapNeighbors[i]).highlightedNeighbor = true;
         }
-        // TODO: do something when 0 cells swappable?
     }
 }
 
@@ -139,13 +178,28 @@ void runCursorMoveAction(CrushData* data, int deltaX, int deltaY) {
 
         // Swap cells!
         Point targetCellPos = {.x= data->cursor.x + deltaX, .y=data->cursor.y + deltaY};
-        bool done = boardSwapCells(data->board, data->cursor, targetCellPos);
-        if (done) {
-            data->playState = CPS_EVALUATING_BOARD;
-        } else {
-            // Some feedback maybe?
+        SwapResult result = boardSwapCells(data->board, data->cursor, targetCellPos, false);
+
+        switch (result) {
+            case SR_SUCCESS:
+                data->playState = CPS_EVALUATING_BOARD;
+                break;
+            case SR_NO_MATCH:
+                displayMessage(data, "Impossible d'échanger pour ne former aucune ligne.", PASTEQUE_COLOR_RED, MICROS(3000));
+                break;
+            case SR_EMPTY_CELLS:
+                displayMessage(data, "Impossible d'échanger avec une case vide.", PASTEQUE_COLOR_RED, MICROS(3000));
+                break;
+            case SR_OUT_OF_BOUNDS:
+                displayMessage(data, "Impossible d'échanger avec une case inexistante", PASTEQUE_COLOR_RED, MICROS(3000));
+                break;
         }
     }
+}
+
+void gameOver(CrushData* data) {
+    data->playState = CPS_GAME_OVER;
+    displayMessage(data, "GAME OVER !", PASTEQUE_COLOR_ORANGE, LONG_MAX);
 }
 
 // ----------
@@ -154,12 +208,15 @@ void runCursorMoveAction(CrushData* data, int deltaX, int deltaY) {
 
 void crushInit(PastequeGameState* gameState, CrushData* data) {
     // Leave some space for horizontal spaces.
-    PanelAdornment boardAdorn = {.style = PAS_CLOSE_BORDER, .colorPair=PASTEQUE_COLOR_WHITE};
+    PanelAdornment boardAdorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_WHITE);
     data->boardPanel = gsAddPanel(gameState, 2, 2, 2 * data->board->width - 1, data->board->height,
                                   boardAdorn, &drawBoardPanel, data);
 
     data->scorePanel = gsAddPanel(gameState, 2, data->boardPanel->y + data->boardPanel->height + 1, 32, 1,
                                   noneAdornment, &drawScorePanel, data);
+
+    data->messagePanel = gsAddPanel(gameState, 2, data->scorePanel->y + 2, 50, 2,
+                                    noneAdornment, &drawMessagePanel, data);
 }
 
 void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long deltaTime) {
@@ -168,9 +225,12 @@ void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long de
 
         if (markedSomething) {
             data->playState = CPS_BLINKING;
-        } else {
+        } else if (boardAnySwapPossible(data->board)) {
             data->playState = CPS_WAITING_INPUT;
+        } else {
+            gameOver(data);
         }
+
     } else if (data->playState == CPS_BLINKING) {
         // Blinking color is handled in drawBoardPanel.
         data->animTimeMicros += deltaTime;
@@ -196,6 +256,12 @@ void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long de
             }
         }
     }
+
+    // Update the message duration timer
+    if (data->messageDurationMicros > 0) {
+        data->messageDurationMicros -= (long)deltaTime;
+        if (data->messageDurationMicros < 0) { data->messageDurationMicros = 0; }
+    }
 }
 
 void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
@@ -216,6 +282,10 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
         } else if (isZQSD && code == KEY_SPACE || isArrows && code == KEY_RETURN) {
             toggleCursorSwapping(data);
         }
+    }
+    if (code == KEY_F) {
+        // force board check debug
+        boardAnySwapPossible(data->board);
     }
 }
 

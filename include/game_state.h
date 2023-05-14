@@ -61,8 +61,7 @@ void initGameState(PastequeGameState* pGameState, Screen* pScreen);
  * it cannot not be NULL. Inside, you can use panel draw functions such as panelDrawText.
  *
  * An optional panel data pointer (pPanelData) can be added to access additional data inside
- * the draw function. By default, it is not freed once the panel is destroyed; this behavior
- * can be changed by setting the freePanelDataOnDestroy attribute.
+ * the draw function. It is not freed once the panel is destroyed.
  *
  * The returned panel belongs to the GameState, and should *not* be freed. It is destroyed
  * automatically when gsRemovePanel is called, or when we're switching to a new scene.

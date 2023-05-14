@@ -10,6 +10,8 @@
 #include "libGameRGR2.h"
 #include <stdbool.h>
 
+#define ADORN_COLOR_OVERRIDE_MAX 128
+
 /**
  * A character style for adorning panels.
  */
@@ -27,6 +29,11 @@ typedef enum {
 typedef struct {
     PanelAdornmentStyle style;
     int colorPair;
+    // This is used to override the color of vertical lines, so we
+    // get good-looking headers (example: boxes).
+    int colorPairOverrideV;
+    int colorPairOverrideStartY;
+    int colorPairOverrideEndY;
 } PanelAdornment;
 
 extern const PanelAdornment noneAdornment;
@@ -75,15 +82,9 @@ typedef struct Panel_S {
     DrawPanelFunction drawFunc;
     /**
      * An optional data structure that can be used inside the Draw Function.
-     * This should point to a malloc-allocated structure and its ownership is
-     * determined by the value of freePanelDataOnDestroy, which is by default FALSE.
+     * This pointer will not be freed by the panel.
      */
     void* pPanelData;
-    /**
-     * When true, frees the panel data present on the panel when the panel is destroyed.
-     * Defaults to FALSE.
-     */
-    bool freePanelDataOnDestroy;
     /**
      * The RGR Game screen. Used internally for drawing on the screen.
      */
@@ -109,14 +110,6 @@ Panel constructPanel(int index, int x, int y, int width, int height,
  * @return true if the Panel is empty, false otherwise
  */
 bool isEmptyPanel(const Panel* pPanel);
-
-/**
- * Frees the panelData contained within the panel and sets it to NULL, depending
- * on the value of freePanelDataOnDestroy.
- * Does nothing if panelData is NULL, or if the Panel is NULL.
- * @param pPanel the panel with data to be freed (can be null)
- */
-void freePanelData(Panel* pPanel);
 
 /**
  * Draws the panel on screen. Used internally by GameState.
@@ -180,5 +173,15 @@ bool panelContains(Panel* pPanel, int x, int y);
  * @param pEvent the event containing mouse coordinates
  */
 bool panelContainsMouse(Panel* pPanel, Event* pEvent);
+
+/**
+ * Creates a panel adornment with the given style and color.
+ * If the verticalColor is -1, then horizontalColor is used for both directions.
+ * @param style the style
+ * @param color the horizontal color
+ * @param verticalColor the vertical color (or horizontalColor if 0)
+ * @return the panel adornment
+ */
+PanelAdornment makeAdornment(PanelAdornmentStyle style, int color);
 
 #endif //PROJET_PASTEQUE_PANEL_H

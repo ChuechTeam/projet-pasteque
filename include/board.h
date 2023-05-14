@@ -6,19 +6,22 @@
 #define MAX_SYMBOLS 6
 
 // Helper macros for manipulating the cells array.
+
+// Returns the cell at location (x, y) in the board. Fails if the coordinates are out of bounds.
 #define CELL(board, x, y) board->cells[boardPosToIndexValidated(board, x, y)]
+#define CELL_LP(board, x, y) board->cells[loopBackY(board, y)*board->width + loopBackX(board, x)]
 #define CELL_PT(board, point) CELL(board, point.x, point.y)
 
-
 typedef struct {
-    // Number from 0 to 5 currently.
+    // Number from 0 to 6 currently.
     // 0 = empty
+    // 1 to 6 = symbols
     char sym;
     bool highlightedNeighbor;
     bool markedForDestruction;
 } CrushCell;
 
-static CrushCell emptyCell = {0, false};
+static CrushCell emptyCell = {0, false, false};
 
 typedef struct {
     int width;
@@ -37,12 +40,17 @@ typedef struct {
     CrushCell cells[];
 } CrushBoard;
 
-
 typedef struct {
     int x;
     int y;
 } Point;
-typedef Point Coos;
+
+typedef enum {
+    SR_SUCCESS,
+    SR_OUT_OF_BOUNDS,
+    SR_EMPTY_CELLS,
+    SR_NO_MATCH
+} SwapResult;
 
 /**
  * Allocates a new board of the given width and height with randomized values,
@@ -63,7 +71,9 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score);
 
 bool boardGravityTick(CrushBoard* board);
 
-bool boardSwapCells(CrushBoard* board, Point cellA, Point cellB);
+SwapResult boardSwapCells(CrushBoard* board, Point posA, Point posB, bool alwaysRevert);
+
+bool boardAnySwapPossible(CrushBoard* board);
 
 Point boardCellIndexToPos(CrushBoard* board, int index);
 
@@ -86,12 +96,36 @@ static bool pointsEqual(Point a, Point b) {
     return a.x == b.x && a.y == b.y;
 }
 
+static int loopBackX(CrushBoard* board, int x) {
+    if (x >= board->width) {
+        return x % board->width;
+    } else if (x < 0) {
+        x = -x;
+        x %= board->width;
+        return (board->width - x);
+    } else {
+        return x;
+    }
+}
+
+static int loopBackY(CrushBoard* board, int y) {
+    if (y >= board->height) {
+        return y % board->height;
+    } else if (y < 0) {
+        y = -y;
+        y %= board->height;
+        return (board->height - y);
+    } else {
+        return y;
+    }
+}
+
 // Temp Debug function
 static int boardPosToIndexValidated(const CrushBoard* board, int x, int y) {
-    if (!boardContainsPos(board, (Point){x, y})) {
+    if (!boardContainsPos(board, (Point) {x, y})) {
         RAGE_QUIT(2010, "WHAT??? that's not correct...");
     }
-    return y*board->width + x;
+    return y * board->width + x;
 }
 
 #endif //PROJET_PASTEQUE_BOARD_H

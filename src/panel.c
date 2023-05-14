@@ -8,7 +8,7 @@
 #include <string.h>
 #include "libGameRGR2.h"
 
-const PanelAdornment noneAdornment = {PAS_NONE, 0};
+const PanelAdornment noneAdornment = {PAS_NONE, 0, -1, -1, -1};
 const Panel emptyPanel = {0};
 
 // HELPER FUNCTIONS
@@ -81,7 +81,6 @@ Panel constructPanel(int index, int x, int y, int width, int height,
     panel.adornment = adornment;
     panel.drawFunc = drawFunc;
     panel.pPanelData = pPanelData;
-    panel.freePanelDataOnDestroy = false;
     panel.pScreen = pScreen;
     return panel;
 }
@@ -91,15 +90,6 @@ bool isEmptyPanel(const Panel* pPanel) {
         RAGE_QUIT(210, "Panel is NULL.");
     }
     return pPanel->drawFunc == NULL;
-}
-
-void freePanelData(Panel* pPanel) {
-    if (pPanel) {
-        if (pPanel->freePanelDataOnDestroy) {
-            free(pPanel->pPanelData);
-        }
-        pPanel->pPanelData = NULL;
-    }
 }
 
 // An internal function for drawing the adornment
@@ -136,42 +126,38 @@ void adornPanel(Panel* pPanel) {
 
     // Draw the corners first.
     drawText(pPanel->pScreen, minX, minY, topLeftCorner, adornment.colorPair);
-    bool hasTopLeft = isWithinScreen(pPanel->pScreen, minX, minY);
     drawText(pPanel->pScreen, maxX, minY, topRightCorner, adornment.colorPair);
-    bool hasTopRight = isWithinScreen(pPanel->pScreen, maxX, minY);
     drawText(pPanel->pScreen, minX, maxY, bottomLeftCorner, adornment.colorPair);
-    bool hasBottomLeft = isWithinScreen(pPanel->pScreen, minX, maxY);
     drawText(pPanel->pScreen, maxX, maxY, bottomRightCorner, adornment.colorPair);
-    bool hasBottomRight = isWithinScreen(pPanel->pScreen, maxX, maxY);
 
     // Draw the horizontal lines, between the corners
     for (int offsetX = 0; offsetX < pPanel->width; ++offsetX) {
+        // Top horizontal line
         int charX = pPanel->x + offsetX;
-        // Top horizontal line exists
-        if (hasTopLeft || hasTopRight) {
-            drawText(pPanel->pScreen, charX, minY, horizontalT, adornment.colorPair);
-        }
+        drawText(pPanel->pScreen, charX, minY, horizontalT, adornment.colorPair);
 
-        // Bottom horizontal line exists
-        if (hasBottomLeft || hasBottomRight) {
-            int charY = pPanel->y + pPanel->height;
-            drawText(pPanel->pScreen, charX, charY, horizontalB, adornment.colorPair);
-        }
+        // Bottom horizontal line
+        int charY = pPanel->y + pPanel->height;
+        drawText(pPanel->pScreen, charX, charY, horizontalB, adornment.colorPair);
     }
 
     // Draw the vertical lines, between the corners
     for (int offsetY = 0; offsetY < pPanel->height; ++offsetY) {
-        int charY = pPanel->y + offsetY;
-        // Left vertical line exists
-        if (hasTopLeft || hasBottomLeft) {
-            drawText(pPanel->pScreen, minX, charY, verticalL, adornment.colorPair);
+        // Apply any color override for vertical lines
+        int color = adornment.colorPair;
+        if (adornment.colorPairOverrideV != -1
+            && adornment.colorPairOverrideStartY <= offsetY
+            && adornment.colorPairOverrideEndY >= offsetY) {
+            color = adornment.colorPairOverrideV;
         }
 
-        // Right vertical line exists
-        if (hasBottomLeft || hasBottomRight) {
-            int charX = pPanel->x + pPanel->width;
-            drawText(pPanel->pScreen, charX, charY, verticalR, adornment.colorPair);
-        }
+        // Left vertical line
+        int charY = pPanel->y + offsetY;
+        drawText(pPanel->pScreen, minX, charY, verticalL, color);
+
+        // Right vertical line
+        int charX = pPanel->x + pPanel->width;
+        drawText(pPanel->pScreen, charX, charY, verticalR, color);
     }
 }
 
@@ -257,4 +243,15 @@ bool panelContains(Panel* pPanel, int x, int y) {
 
 bool panelContainsMouse(Panel* pPanel, Event* pEvent) {
     return panelContains(pPanel, pEvent->mouseEvent.x, pEvent->mouseEvent.y);
+}
+
+PanelAdornment makeAdornment(PanelAdornmentStyle style, int color) {
+    PanelAdornment adornment;
+    adornment.style = style;
+    adornment.colorPair = color;
+    adornment.colorPairOverrideV = -1;
+    adornment.colorPairOverrideStartY = -1;
+    adornment.colorPairOverrideEndY = -1;
+
+    return adornment;
 }

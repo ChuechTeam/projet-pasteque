@@ -66,7 +66,6 @@ void gsRemovePanel(PastequeGameState* pGameState, Panel* panel) {
     Panel* startPtr = pGameState->panels;
     Panel* endPtr = pGameState->panels + MAX_PANELS;
     if (panel >= startPtr && panel <= endPtr && ((panel - startPtr) % sizeof(Panel)) == 0) {
-        freePanelData(panel); // Free any ressources beforehand.
         *panel = emptyPanel;
         // Removing a panel doesn't change the order of panels, so no sorting needed.
     } else {
@@ -111,7 +110,6 @@ void gsRemoveAllPanels(PastequeGameState* pGameState) {
     for (int i = 0; i < MAX_PANELS; ++i) {
         Panel* panel = &pGameState->panels[i];
         if (!isEmptyPanel(panel)) {
-            freePanelData(panel);
             *panel = emptyPanel;
         }
     }

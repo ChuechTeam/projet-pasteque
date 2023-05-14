@@ -13,8 +13,8 @@
 #define BUTTON_WIDTH 22
 
 char* TitleAsciiArtL1 = "  ___  _   ___ _____ ___ ___  _   _ ___ ";
-char* TitleAsciiArtL2 = " | _ \\/_\\ / __|_   _| __/ _ \\| | | | __|\n";
-char* TitleAsciiArtL3 = " |  _/ _ \\\\__ \\ | | | _| (_) | |_| | _| \n";
+char* TitleAsciiArtL2 = " | _ \\/_\\ / __|_   _| __/ _ \\| | | | __|";
+char* TitleAsciiArtL3 = " |  _/ _ \\\\__ \\ | | | _| (_) | |_| | _| ";
 char* TitleAsciiArtL4 = " |_|/_/ \\_\\___/ |_| |___\\__\\_\\\\___/|___|";
 char* ArrowRight = "▶";
 
@@ -24,6 +24,7 @@ struct MainMenuData_S {
     Panel* playButtonPanel;
     Panel* highScoresButtonPanel;
     Panel* quitButtonPanel;
+    Panel* sidePanel;
     int focusedButtonIndex; // 0 to BUTTONS-1 (exclusive)
 };
 
@@ -56,7 +57,7 @@ void drawButtonGeneric(Panel* panel, char* label, int buttonIndex, void* panelDa
     if (data->focusedButtonIndex == buttonIndex) {
         color = PASTEQUE_COLOR_BLACK;
         // Draw the background of the button.
-        panelDrawLine(panel, 2, 0, panel->width - 2, ' ', color);
+        panelDrawLine(panel, 2, 0, panel->width - 2, ' ', PASTEQUE_COLOR_BLACK);
         // Draw the arrow on the left.
         panelDrawText(panel, 0, 0, ArrowRight, PASTEQUE_COLOR_WHITE);
     } else {
@@ -77,12 +78,20 @@ void drawQuitButtonPanel(Panel* panel, PastequeGameState* gameState, void* panel
     drawButtonGeneric(panel, "Quitter", 2, panelData);
 }
 
+void drawSidePanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    for (int y = 0; y < 3; ++y) {
+        panelDrawLine(panel, 0, y, panel->width, ' ', PASTEQUE_COLOR_BLACK);
+    }
+    panelDrawText(panel, 4, 1, "Sous-menu", PASTEQUE_COLOR_BLACK);
+    panelDrawText(panel, 7, 5, "WIP!", PASTEQUE_COLOR_WHITE);
+}
+
 // -----------------------------------------------
 // GAME LIFECYCLE FUNCTIONS
 // -----------------------------------------------
 
 void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
-    PanelAdornment adorn = {.style = PAS_DOUBLE_BORDER, .colorPair = PASTEQUE_COLOR_WHITE};
+    PanelAdornment adorn = makeAdornment(PAS_DOUBLE_BORDER, PASTEQUE_COLOR_WHITE);
     data->titlePanel = gsAddPanel(gameState, 2, 2, TITLE_WIDTH + TITLE_MARGIN, TITLE_HEIGHT + TITLE_MARGIN, adorn,
                                   &drawTitlePanel, NULL);
     data->subtitlePanel = gsAddPanel(gameState, 2, 11, 30, 2, noneAdornment, &drawSubtitlePanel, NULL);
@@ -91,6 +100,13 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
     data->highScoresButtonPanel = gsAddPanel(gameState, 4, 16, BUTTON_WIDTH, 1, noneAdornment,
                                              &drawHighScoresButtonPanel, data);
     data->quitButtonPanel = gsAddPanel(gameState, 4, 18, BUTTON_WIDTH, 1, noneAdornment, &drawQuitButtonPanel, data);
+
+    PanelAdornment sideAdorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_BLUE);
+    sideAdorn.colorPairOverrideV = PASTEQUE_COLOR_BLUE_ON_WHITE;
+    sideAdorn.colorPairOverrideStartY = 0;
+    sideAdorn.colorPairOverrideEndY = 2;
+    data->sidePanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 18, 18,
+                                 sideAdorn, &drawSidePanel, data);
 
     data->focusedButtonIndex = 0;
 }
@@ -103,32 +119,28 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
     if (pEvent->code == KEY_MOUSE) {
         // Left click OR right click
         bool isMouseClick = (pEvent->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0;
-        
+
         // Highlight the button when the cursor goes over it.
         // Run the button action when the user does a left/right click.
         if (panelContainsMouse(data->playButtonPanel, pEvent)) {
             data->focusedButtonIndex = 0;
             mouseClickedOnButton = isMouseClick;
-        }
-        else if (panelContainsMouse(data->highScoresButtonPanel, pEvent)) {
+        } else if (panelContainsMouse(data->highScoresButtonPanel, pEvent)) {
             data->focusedButtonIndex = 1;
             mouseClickedOnButton = isMouseClick;
-        }
-        else if (panelContainsMouse(data->quitButtonPanel, pEvent)) {
+        } else if (panelContainsMouse(data->quitButtonPanel, pEvent)) {
             data->focusedButtonIndex = 2;
             mouseClickedOnButton = isMouseClick;
         }
-    }
-    else if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
+    } else if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && data->focusedButtonIndex > 0) {
         // Select button on top
         data->focusedButtonIndex--;
-    }
-    else if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && data->focusedButtonIndex < BUTTONS -1) {
+    } else if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && data->focusedButtonIndex < BUTTONS - 1) {
         // Select button on bottom
         data->focusedButtonIndex++;
     }
 
-    if (pEvent->code == KEY_RETURN || mouseClickedOnButton) {
+    if (pEvent->code == KEY_RETURN || pEvent->code == KEY_SPACE || mouseClickedOnButton) {
         // Run the button action
         switch (data->focusedButtonIndex) {
             case 0: // Play
