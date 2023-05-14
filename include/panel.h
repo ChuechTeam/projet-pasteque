@@ -148,6 +148,12 @@ void panelDrawLine(Panel* pPanel, int x, int y, int w, char ch, int clrId);
 void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId);
 
 /**
+ * Same as panelDrawText, but centers the text inside the panel.
+ * A value of -1 for any axis (x or y) will find the centered coordinates.
+ */
+void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId);
+
+/**
  * Moves a panel to the given coordinates.
  * The coordinates can be outside of the screen, and even negative.
  *

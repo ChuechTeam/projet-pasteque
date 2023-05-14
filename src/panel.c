@@ -197,6 +197,8 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId) {
         RAGE_QUIT(210, "Panel is NULL.");
     } else if (isEmptyPanel(pPanel)) {
         RAGE_QUIT(211, "Cannot draw on an empty Panel.");
+    } else if (pText == NULL) {
+        RAGE_QUIT(212, "Cannot draw a NULL string.");
     }
 
     // TODO: Do something when the text goes off the bounds.
@@ -254,4 +256,32 @@ PanelAdornment makeAdornment(PanelAdornmentStyle style, int color) {
     adornment.colorPairOverrideEndY = -1;
 
     return adornment;
+}
+
+void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId) {
+    if (pPanel == NULL) {
+        RAGE_QUIT(210, "Panel is NULL.");
+    } else if (isEmptyPanel(pPanel)) {
+        RAGE_QUIT(211, "Cannot draw on an empty Panel.");
+    } else if (pText == NULL) {
+        RAGE_QUIT(212, "Cannot draw a NULL string.");
+    }
+
+    int length = (int)strlen(pText);
+    if (x == -1) {
+        if (length <= pPanel->width) {
+            x = (pPanel->width - length) / 2;
+        } else {
+            x = 0;
+        }
+    }
+    if (y == -1) {
+        if (length <= pPanel->height) {
+            y = (pPanel->height - length) / 2;
+        } else {
+            y = 0;
+        }
+    }
+
+    panelDrawText(pPanel, x, y, pText, clrId);
 }

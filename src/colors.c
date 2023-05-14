@@ -12,6 +12,12 @@ void initBGColorBlack(int id, int color) {
     setColorPair(id, COLOR_BLACK, color);
 }
 
+int getTextColor(short id) {
+    short useless, textColor;
+    pair_content(id, &textColor, &useless);
+    return textColor;
+}
+
 void initColors() {
     // See https://www.ditig.com/256-colors-cheat-sheet
     setColor(COLOR_WHITE, 255, 255, 255);
@@ -47,5 +53,7 @@ void initColors() {
 
     initBGColorBlack(PASTEQUE_COLOR_RED_BLINK2_BG, 196);
 
-    setColorPair(PASTEQUE_COLOR_BLUE_ON_WHITE, PASTEQUE_COLOR_BLUE, COLOR_WHITE);
+    setColorPair(PASTEQUE_COLOR_GREY_25_BG, COLOR_WHITE, 237);
+
+    setColorPair(PASTEQUE_COLOR_BLUE_ON_WHITE, getTextColor(PASTEQUE_COLOR_BLUE), COLOR_WHITE);
 }

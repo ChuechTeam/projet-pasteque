@@ -4,6 +4,7 @@
 #include "colors.h"
 #include "scenes/crush_scene.h"
 #include "stdbool.h"
+#include "ui.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -25,6 +26,8 @@ struct MainMenuData_S {
     Panel* highScoresButtonPanel;
     Panel* quitButtonPanel;
     Panel* sidePanel;
+    ToggleOption sideToggleTests[3];
+    UIState sideUIState;
     int focusedButtonIndex; // 0 to BUTTONS-1 (exclusive)
 };
 
@@ -79,11 +82,28 @@ void drawQuitButtonPanel(Panel* panel, PastequeGameState* gameState, void* panel
 }
 
 void drawSidePanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    MainMenuData* data = panelData;
+
     for (int y = 0; y < 3; ++y) {
         panelDrawLine(panel, 0, y, panel->width, ' ', PASTEQUE_COLOR_BLACK);
     }
-    panelDrawText(panel, 4, 1, "Sous-menu", PASTEQUE_COLOR_BLACK);
-    panelDrawText(panel, 7, 5, "WIP!", PASTEQUE_COLOR_WHITE);
+    panelDrawTextCentered(panel, -1, 1, "Sous-menu", PASTEQUE_COLOR_BLACK);
+
+    panelDrawTextCentered(panel, -1, 5, "Nombre de symboles", PASTEQUE_COLOR_WHITE);
+
+    data->sideToggleTests[0] = makeToggleOption(panel, 5, 7, 3, "4", 0, toggleStyleMonochrome);
+    drawToggleOption(panel, &data->sideToggleTests[0], &data->sideUIState);
+
+    data->sideToggleTests[1] = makeToggleOption(panel, 11, 7, 3, "5", 1, toggleStyleMonochrome);
+    drawToggleOption(panel, &data->sideToggleTests[1], &data->sideUIState);
+
+    data->sideToggleTests[2] = makeToggleOption(panel, 17, 7, 3, "6", 2, toggleStyleMonochrome);
+    drawToggleOption(panel, &data->sideToggleTests[2], &data->sideUIState);
+
+    panelDrawTextCentered(panel, -1, 12, "Ce sous-menu fait rien", PASTEQUE_COLOR_WHITE);
+    panelDrawTextCentered(panel, -1, 13, "pour l'instant.", PASTEQUE_COLOR_WHITE);
+
+    panelDrawTextCentered(panel, -1, 15, "TODO: Le rendre utile", PASTEQUE_COLOR_WHITE);
 }
 
 // -----------------------------------------------
@@ -91,7 +111,7 @@ void drawSidePanel(Panel* panel, PastequeGameState* gameState, void* panelData) 
 // -----------------------------------------------
 
 void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
-    PanelAdornment adorn = makeAdornment(PAS_DOUBLE_BORDER, PASTEQUE_COLOR_WHITE);
+    PanelAdornment adorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_WHITE);
     data->titlePanel = gsAddPanel(gameState, 2, 2, TITLE_WIDTH + TITLE_MARGIN, TITLE_HEIGHT + TITLE_MARGIN, adorn,
                                   &drawTitlePanel, NULL);
     data->subtitlePanel = gsAddPanel(gameState, 2, 11, 30, 2, noneAdornment, &drawSubtitlePanel, NULL);
@@ -105,8 +125,9 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
     sideAdorn.colorPairOverrideV = PASTEQUE_COLOR_BLUE_ON_WHITE;
     sideAdorn.colorPairOverrideStartY = 0;
     sideAdorn.colorPairOverrideEndY = 2;
-    data->sidePanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 18, 18,
+    data->sidePanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 26, 18,
                                  sideAdorn, &drawSidePanel, data);
+    data->sideUIState.selectedIndex = 0;
 
     data->focusedButtonIndex = 0;
 }
@@ -153,6 +174,11 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
                 gsQuitGame(gameState);
         }
     }
+
+    handleToggleOptionEvent(&data->sideUIState, &data->sideToggleTests[0], pEvent);
+    handleToggleOptionEvent(&data->sideUIState, &data->sideToggleTests[1], pEvent);
+    handleToggleOptionEvent(&data->sideUIState, &data->sideToggleTests[2], pEvent);
+
 }
 
 void mainMenuDrawBackground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen) {

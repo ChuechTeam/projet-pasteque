@@ -280,46 +280,37 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
         // A B B A A <- A A A is a line.
         // And reduce the interval of cells to scan to the inner part (in the example, B B).
         if (firstCell->sym != 0 && lastCell->sym != 0 && firstCell->sym == lastCell->sym) {
-            length = 2;
+            length = 2; // First and last cell.
 
-            // Search backwards
-            // Handles cases like: A B B A A
-            for (int x = board->width - 1; x >= 0; x--) {
-                if (lineContinues(board, x, y, -1, 0)) {
+            // Find forward cells A [A A] B B A A A
+            while (startX < endX) { // Make sure we don't loop forever if we have a full line
+                if (lineContinues(board, startX, y, 1, 0)) {
+                    startX++;
                     length++;
-                } else if (length >= 3) {
-                    startX = 1;
-                    endX = x;
-                    firstCell->markedForDestruction = true;
-                    for (int i = 0; i < length - 1; ++i) {
-                        CELL(board, board->width - 1 - i, y).markedForDestruction = true;
-                    }
-                    *score += points(length);
-                    break;
                 } else {
                     break;
                 }
             }
 
-            // Search forwards
-            // Handles cases like: A A B B A
-            if (startX == 0) { // Only search forwards when backwards failed
-                for (int x = 0; x < board->width; x++) {
-                    if (lineContinues(board, x, y, 1, 0)) {
-                        length++;
-                    } else if (length >= 3) {
-                        startX = x;
-                        endX = board->width - 1;
-                        lastCell->markedForDestruction = true;
-                        for (int i = 0; i < length - 1; ++i) {
-                            CELL(board, i, y).markedForDestruction = true;
-                        }
-                        *score += points(length);
-                        break;
-                    } else {
-                        break;
-                    }
+            // Find previous cells A A A B B [A A] A
+            while (endX > startX) {
+                if (lineContinues(board, endX-1, y, -1, 0)) {
+                    endX--;
+                    length++;
+                } else {
+                    break;
                 }
+            }
+
+            // Mark the cells for destruction, both from start and end.
+            if (length >= 3) {
+                for (int xs = 0; xs <= startX; xs++) {
+                    CELL(board, xs, y).markedForDestruction = true;
+                }
+                for (int xe = board->width; xe >= endX; xe--) {
+                    CELL(board, xe - 1, y).markedForDestruction = true;
+                }
+                *score += points(length);
             }
 
             length = 1;
@@ -351,42 +342,35 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
         if (firstCell->sym != 0 && lastCell->sym != 0 && firstCell->sym == lastCell->sym) {
             length = 2;
 
-            // Search upwards
-            for (int y = board->height - 1; y >= 0; y--) {
-                if (lineContinues(board, x, y, 0, -1)) {
+            // Find forward cells A [A A] B B A A A (vertically)
+            while (startY < endY) { // Make sure we don't loop forever if we have a full line
+                if (lineContinues(board, x, startY, 0, 1)) {
+                    startY++;
                     length++;
-                } else if (length >= 3) {
-                    startY = 1;
-                    endY = y;
-                    firstCell->markedForDestruction = true;
-                    for (int i = 0; i < length - 1; ++i) {
-                        CELL(board, x, board->height - 1 - i).markedForDestruction = true;
-                    }
-                    *score += points(length);
-                    break;
                 } else {
                     break;
                 }
             }
 
-            // Search downwards
-            if (startY == 0) { // Only search downwards when upwards failed
-                for (int y = 0; y < board->height; y++) {
-                    if (lineContinues(board, x, y, 0, 1)) {
-                        length++;
-                    } else if (length >= 3) {
-                        startY = y;
-                        endY = board->height - 1;
-                        lastCell->markedForDestruction = true;
-                        for (int i = 0; i < length - 1; ++i) {
-                            CELL(board, x, i).markedForDestruction = true;
-                        }
-                        *score += points(length);
-                        break;
-                    } else {
-                        break;
-                    }
+            // Find previous cells A A A B B [A A] A (vertically)
+            while (endY > startY) {
+                if (lineContinues(board, x, endY-1, 0, -1)) {
+                    endY--;
+                    length++;
+                } else {
+                    break;
                 }
+            }
+
+            // Mark the cells for destruction, both from start and end.
+            if (length >= 3) {
+                for (int ys = 0; ys <= startY; ys++) {
+                    CELL(board, x, ys).markedForDestruction = true;
+                }
+                for (int ye = board->height; ye >= endY; ye--) {
+                    CELL(board, x, ye - 1).markedForDestruction = true;
+                }
+                *score += points(length);
             }
 
             length = 1;
