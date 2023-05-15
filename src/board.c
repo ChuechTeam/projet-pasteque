@@ -5,9 +5,10 @@
 
 #define MAX_WIDTH 30
 #define MAX_HEIGHT 30
+#define LINE_END_AUTODETECT -1000
 
 // Define those earlier so we can use them in makeCrushBoard.
-bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY);
+bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY, int lineEnd);
 
 void fillBoardRandom(CrushBoard* board, char symbols);
 
@@ -84,13 +85,13 @@ void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char addition
     int numForbiddenSymbols = 0;
 
     // Check if we have two consecutive symbols in the horizontal line behind.
-    if (x > 1 && lineContinues(board, x - 1, y, -1, 0)) {
+    if (x > 1 && lineContinues(board, x - 1, y, -1, 0, LINE_END_AUTODETECT)) {
         forbiddenSymbol1 = CELL(board, x - 1, y).sym;
         numForbiddenSymbols++;
     }
 
     // Check if we have two consecutive symbols in the vertical line above.
-    if (y > 1 && lineContinues(board, x, y - 1, 0, -1)) {
+    if (y > 1 && lineContinues(board, x, y - 1, 0, -1, LINE_END_AUTODETECT)) {
         forbiddenSymbol2 = CELL(board, x, y - 1).sym;
         numForbiddenSymbols++;
     }
@@ -104,7 +105,7 @@ void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char addition
         CrushCell prevCell = CELL(board, x - 1, y);
 
         // Case A A B B X  then  A B B A X
-        if (lineContinues(board, 0, y, 1, 0) || firstCell.sym == prevCell.sym) {
+        if (lineContinues(board, 0, y, 1, 0, LINE_END_AUTODETECT) || firstCell.sym == prevCell.sym) {
             forbiddenSymbol3 = firstCell.sym;
             numForbiddenSymbols++;
         }
@@ -117,7 +118,7 @@ void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char addition
         CrushCell prevCell = CELL(board, x, y - 1);
 
         // Case A A B B X  then  A B B A X
-        if (lineContinues(board, x, 0, 0, 1) || firstCell.sym == prevCell.sym) {
+        if (lineContinues(board, x, 0, 0, 1, LINE_END_AUTODETECT) || firstCell.sym == prevCell.sym) {
             forbiddenSymbol4 = firstCell.sym;
             numForbiddenSymbols++;
         }
@@ -232,7 +233,12 @@ int points(int length) {
     }
 }
 
-bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY) {
+// Returns true if the cell at (x, y) has the same symbol on the next cell.
+// The next cell is determined using the offsetX and offsetY parameters. Both cannot be non-zero.
+// The finalCellPos parameter can be used to customize the x or y coordinate at which the final cell is.
+// (final cell being the very last cell at the end of the line, depending on the direction)
+// You can pass LINE_END_AUTODETECT to this parameter to find automatically the end
+bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY, int lineEnd) {
     CrushCell cur = CELL(board, x, y);
     if (cur.sym == 0) {
         // Empty cell, doesn't make lines.
@@ -241,7 +247,11 @@ bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY) {
 
     // Find where the last cell is (depending on the direction)
     bool isFinalCell = false;
-    if (offsetX > 0) {
+    if (lineEnd != LINE_END_AUTODETECT) {
+        // Use X or Y depending on offsetX or offsetY values.
+        isFinalCell = offsetX != 0 ? x == lineEnd : y == lineEnd;
+    }
+    else if (offsetX > 0) {
         isFinalCell = (x == board->width - 1);
     } else if (offsetX < 0) {
         isFinalCell = (x == 0);
@@ -284,7 +294,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
 
             // Find forward cells A [A A] B B A A A
             while (startX < endX) { // Make sure we don't loop forever if we have a full line
-                if (lineContinues(board, startX, y, 1, 0)) {
+                if (lineContinues(board, startX, y, 1, 0, LINE_END_AUTODETECT)) {
                     startX++;
                     length++;
                 } else {
@@ -294,7 +304,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
 
             // Find previous cells A A A B B [A A] A
             while (endX > startX) {
-                if (lineContinues(board, endX-1, y, -1, 0)) {
+                if (lineContinues(board, endX-1, y, -1, 0, LINE_END_AUTODETECT)) {
                     endX--;
                     length++;
                 } else {
@@ -312,12 +322,13 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
                 }
                 *score += points(length);
             }
-
-            length = 1;
         }
 
+        // Reset the length
+        length = 1;
+
         for (int x = startX; x < endX; x++) {
-            if (lineContinues(board, x, y, 1, 0)) {
+            if (lineContinues(board, x, y, 1, 0, endX - 1)) {
                 length++;
             } else {
                 if (length >= 3) {
@@ -344,7 +355,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
 
             // Find forward cells A [A A] B B A A A (vertically)
             while (startY < endY) { // Make sure we don't loop forever if we have a full line
-                if (lineContinues(board, x, startY, 0, 1)) {
+                if (lineContinues(board, x, startY, 0, 1, LINE_END_AUTODETECT)) {
                     startY++;
                     length++;
                 } else {
@@ -354,7 +365,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
 
             // Find previous cells A A A B B [A A] A (vertically)
             while (endY > startY) {
-                if (lineContinues(board, x, endY-1, 0, -1)) {
+                if (lineContinues(board, x, endY-1, 0, -1, LINE_END_AUTODETECT)) {
                     endY--;
                     length++;
                 } else {
@@ -377,7 +388,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
         }
 
         for (int y = startY; y < endY; y++) {
-            if (lineContinues(board, x, y, 0, 1)) {
+            if (lineContinues(board, x, y, 0, 1, endY - 1)) {
                 length++;
             } else {
                 if (length > 2) {
