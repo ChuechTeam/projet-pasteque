@@ -182,6 +182,9 @@ void gameLoop(GameData* pGame){
     echo();
     endwin();
 
+    // PASTEQUE MOD: Restore old mouse behavior.
+    printf("\033[?1003l");
+
 #if _WIN32
     // PASTEQUE MOD: Clear the sync timer for Windows
     CloseHandle(pGame->pWinTimer);

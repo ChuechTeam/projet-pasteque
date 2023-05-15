@@ -8,7 +8,7 @@
 // Helper macros for manipulating the cells array.
 
 // Returns the cell at location (x, y) in the board. Fails if the coordinates are out of bounds.
-#define CELL(board, x, y) board->cells[boardPosToIndexValidated(board, x, y)]
+#define CELL(board, x, y) board->cells[boardPosToIndexValidated(board, x, y, __FILE__, __LINE__)]
 #define CELL_LP(board, x, y) board->cells[loopBackY(board, y)*board->width + loopBackX(board, x)]
 #define CELL_PT(board, point) CELL(board, point.x, point.y)
 
@@ -121,9 +121,11 @@ static int loopBackY(CrushBoard* board, int y) {
 }
 
 // Temp Debug function
-static int boardPosToIndexValidated(const CrushBoard* board, int x, int y) {
+static int boardPosToIndexValidated(const CrushBoard* board, int x, int y, const char* file, int line) {
     if (!boardContainsPos(board, (Point) {x, y})) {
-        RAGE_QUIT(2010, "WHAT??? that's not correct...");
+        char buffer[256] = {0};
+        sprintf(buffer, "Out of bounds: %s ; %d", file, line);
+        RAGE_QUIT(2010, buffer);
     }
     return y * board->width + x;
 }
