@@ -55,5 +55,9 @@ void initColors() {
 
     setColorPair(PASTEQUE_COLOR_GREY_25_BG, COLOR_WHITE, 237);
 
+    initBGColorBlack(PASTEQUE_COLOR_LIGHT_BLUE_BG, 39);
+
+    initBGColorBlack(PASTEQUE_COLOR_TURQUOISE_BG, 45);
+
     setColorPair(PASTEQUE_COLOR_BLUE_ON_WHITE, getTextColor(PASTEQUE_COLOR_BLUE), COLOR_WHITE);
 }

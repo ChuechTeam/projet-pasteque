@@ -83,7 +83,7 @@ char* cellToStr(CrushCell cell, ColorId* outColor) {
             return "@";
         case 6:
             *outColor = PASTEQUE_COLOR_TURQUOISE;
-            return "%";
+            return "*";
         default:
             *outColor = PASTEQUE_COLOR_WHITE;
             return "?";

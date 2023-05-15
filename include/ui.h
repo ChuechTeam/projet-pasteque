@@ -13,14 +13,18 @@
 #include "panel.h"
 #include "colors.h"
 
+#define TEXT_INPUT_MAX 128
+
 typedef struct {
     int inactiveColorId;
     int activeColorId;
-    int toggledColorId;
+    int toggledInactiveColorId;
+    int toggledActiveColorId;
 } ToggleOptionStyle;
 
 typedef struct {
     // Set inside drawPanel
+    bool initialized;
     Panel* panel;
     int x;
     int y;
@@ -32,17 +36,55 @@ typedef struct {
     bool toggled;
 } ToggleOption;
 
+
+typedef struct {
+    int inactiveColorId;
+    int activeColorId;
+    int writingColorId;
+} TextInputStyle;
+
+typedef struct {
+    // Set inside drawPanel
+    bool initialized;
+    Panel* panel;
+    int x;
+    int y;
+    int width;
+    int interactionIndex;
+    int maxLength;
+    TextInputStyle style;
+    // Set outside drawPanel
+    char inputText[TEXT_INPUT_MAX];
+    bool isWriting;
+} TextInput;
+
 typedef struct {
     int selectedIndex;
+    bool focused;
 } UIState;
 
-static ToggleOptionStyle toggleStyleMonochrome = {PASTEQUE_COLOR_WHITE,
-                                                  PASTEQUE_COLOR_GREY_25_BG,
-                                                  PASTEQUE_COLOR_BLACK};
+static ToggleOptionStyle toggleStyleDefault = {PASTEQUE_COLOR_WHITE,
+                                               PASTEQUE_COLOR_LIGHT_BLUE_BG,
+                                               PASTEQUE_COLOR_BLACK,
+                                               PASTEQUE_COLOR_TURQUOISE_BG};
 
-ToggleOption makeToggleOption(Panel* panel, int x, int y, int width, char* text, int interactionIndex, ToggleOptionStyle style);
-void drawToggleOption(Panel* panel, const ToggleOption* option, UIState* state);
+static ToggleOptionStyle toggleStyleButton = {PASTEQUE_COLOR_WHITE,
+                                              PASTEQUE_COLOR_LIGHT_BLUE_BG,
+                                              PASTEQUE_COLOR_LIGHT_BLUE_BG,
+                                              PASTEQUE_COLOR_LIGHT_BLUE_BG};
+
+static TextInputStyle textInputStyleDefault = {PASTEQUE_COLOR_BLACK,
+                                               PASTEQUE_COLOR_LIGHT_BLUE_BG,
+                                               PASTEQUE_COLOR_TURQUOISE_BG};
+
+void drawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width, char* text,
+                      int interactionIndex, ToggleOptionStyle style);
 // True when toggled
 bool handleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event);
+
+void drawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength, int interactionIndex,
+                   TextInputStyle style);
+
+bool handleTextInputEvent(UIState* state, TextInput* input, Event* event);
 
 #endif //PROJET_PASTEQUE_UI_H
