@@ -78,6 +78,7 @@ Panel constructPanel(int index, int x, int y, int width, int height,
     panel.y = y;
     panel.width = width;
     panel.height = height;
+    panel.visible = true;
     panel.adornment = adornment;
     panel.drawFunc = drawFunc;
     panel.pPanelData = pPanelData;
@@ -165,7 +166,7 @@ void drawPanel(Panel* pPanel, PastequeGameState* pGameState) {
     if (pPanel == NULL) {
         RAGE_QUIT(210, "Panel is NULL.");
     }
-    if (!isEmptyPanel(pPanel)) {
+    if (!isEmptyPanel(pPanel) && pPanel->visible) {
         // Call the draw function so drawPanelX functions get called.
         pPanel->drawFunc(pPanel, pGameState, pPanel->pPanelData);
         // Then, adorn the panel, as the adornment can change inside the draw function.

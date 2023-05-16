@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define BOARD_WIDTH_MAX 100
+#define BOARD_HEIGHT_MAX 100
 #define MAX_SYMBOLS 6
 
 // Helper macros for manipulating the cells array.
@@ -23,7 +25,15 @@ typedef struct {
 
 static CrushCell emptyCell = {0, false, false};
 
+typedef enum {
+    BSP_SMALL,
+    BSP_MEDIUM,
+    BSP_LARGE,
+    BSP_CUSTOM,
+} BoardSizePreset;
+
 typedef struct {
+    BoardSizePreset sizePreset;
     int width;
     int height;
     int cellCount;
@@ -59,7 +69,7 @@ typedef enum {
  * @param height the height of the board (> 3)
  * @return the created crush board
  */
-CrushBoard* makeCrushBoard(int width, int height, char symbols);
+CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, char symbols);
 
 /**
  * Destroys all marked cells.
@@ -85,6 +95,8 @@ Point boardCellIndexToPos(CrushBoard* board, int index);
  * @param n
  */
 void boardGetNeighbors(CrushBoard* board, Point cell, Point neighbors[], int* n);
+
+void boardGetPresetDimensions(BoardSizePreset preset, int* outWidth, int* outHeight);
 
 // The following functions are inside the header for better performance (inlining).
 

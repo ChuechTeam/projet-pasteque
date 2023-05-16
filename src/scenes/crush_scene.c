@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "board.h"
+#include "scenes/main_menu_scene.h"
 #include <limits.h>
 
 #define MILLI_IN_MICROS 1000L
@@ -46,14 +47,14 @@ struct CrushData_S {
     Panel* messagePanel;
 };
 
-CrushData* makeCrushData(int width, int height, char symbols, CrushInputMethod inputMethod) {
+CrushData* makeCrushData(BoardSizePreset sizePreset, int width, int height, char symbols, CrushInputMethod inputMethod) {
     CrushData* data = calloc(1, sizeof(CrushData));
     if (data == NULL) {
         RAGE_QUIT(2001, "Failed to allocate CrushData.");
     }
 
     // This will validate width, height, and the symbols.
-    data->board = makeCrushBoard(width, height, symbols);
+    data->board = makeCrushBoard(sizePreset, width, height, symbols);
     data->inputMethod = inputMethod;
     data->message[0] = '\0';
     data->messageColor = PASTEQUE_COLOR_WHITE;
@@ -199,7 +200,7 @@ void runCursorMoveAction(CrushData* data, int deltaX, int deltaY) {
 
 void gameOver(CrushData* data) {
     data->playState = CPS_GAME_OVER;
-    displayMessage(data, "GAME OVER !", PASTEQUE_COLOR_ORANGE, LONG_MAX);
+    displayMessage(data, "GAME OVER ! (Appuyez sur P pour revenir au menu)", PASTEQUE_COLOR_ORANGE, LONG_MAX);
 }
 
 // ----------
@@ -283,10 +284,10 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
             toggleCursorSwapping(data);
         }
     }
-    if (code == KEY_F) {
-        // force board check debug
-        boardAnySwapPossible(data->board);
+    if (code == KEY_P && data->playState == CPS_GAME_OVER) {
+        gsSwitchScene(gameState, SN_MAIN_MENU, makeMainMenuData());
     }
+
 }
 
 void crushDrawBackground(PastequeGameState* gameState, CrushData* data, Screen* pScreen) {

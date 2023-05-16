@@ -1,9 +1,11 @@
 #include <malloc.h>
+#include <stdlib.h>
 #include "scenes/main_menu_scene.h"
 #include "colors.h"
 #include "scenes/crush_scene.h"
 #include "stdbool.h"
 #include "ui.h"
+#include "board.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -34,8 +36,9 @@ struct MainMenuData_S {
     struct PlaySubMenu {
         UIState state;
         ToggleOption symbolOptions[3];
-        TextInput columnsInput;
-        TextInput rowsInput;
+        ToggleOption presetOptions[4];
+        TextInput widthInput;
+        TextInput heightInput;
         ToggleOption playButton;
         ToggleOption backButton;
     } playUI;
@@ -43,8 +46,9 @@ struct MainMenuData_S {
 
     struct PlaySettings {
         char symbols;
-        int rows;
-        int columns;
+        BoardSizePreset sizePreset;
+        int height;
+        int width;
     } playSettings;
 };
 
@@ -80,7 +84,8 @@ void drawMainUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
     MainSubMenu* ui = &data->mainUI;
 
     drawToggleOption(panel, &ui->state, &ui->playButton, 2, 0, BUTTON_WIDTH, "Jouer", 0, toggleStyleButton);
-    drawToggleOption(panel, &ui->state, &ui->highScoresButton, 2, 2, BUTTON_WIDTH, "Meilleurs scores", 1, toggleStyleButton);
+    drawToggleOption(panel, &ui->state, &ui->highScoresButton, 2, 2, BUTTON_WIDTH, "Meilleurs scores", 1,
+                     toggleStyleButton);
     drawToggleOption(panel, &ui->state, &ui->quitButton, 2, 4, BUTTON_WIDTH, "Quitter", 2, toggleStyleButton);
 
     // Draw the little arrow on the left.
@@ -97,26 +102,40 @@ void drawSidePanel(Panel* panel, PastequeGameState* gameState, void* panelData) 
     for (int y = 0; y < 3; ++y) {
         panelDrawLine(panel, 0, y, panel->width, ' ', PASTEQUE_COLOR_BLACK);
     }
-    panelDrawTextCentered(panel, -1, 1, "Sous-menu", PASTEQUE_COLOR_BLACK);
-    panelDrawTextCentered(panel, -1, 5, "Nombre de symboles", PASTEQUE_COLOR_WHITE);
+    panelDrawTextCentered(panel, -1, 1, "Nouvelle partie", PASTEQUE_COLOR_BLACK);
+    panelDrawTextCentered(panel, -1, 4, "Nombre de symboles", PASTEQUE_COLOR_WHITE);
 
-    drawToggleOption(panel, &ui->state, &ui->symbolOptions[0], 5, 7, 3, "4", 0, toggleStyleDefault);
-    drawToggleOption(panel, &ui->state, &ui->symbolOptions[1], 11, 7, 3, "5", 1, toggleStyleDefault);
-    drawToggleOption(panel, &ui->state, &ui->symbolOptions[2], 17, 7, 3, "6", 2, toggleStyleDefault);
+    drawToggleOption(panel, &ui->state, &ui->symbolOptions[0], 5, 6, 3, "4", 0, toggleStyleDefault);
+    drawToggleOption(panel, &ui->state, &ui->symbolOptions[1], 11, 6, 3, "5", 1, toggleStyleDefault);
+    drawToggleOption(panel, &ui->state, &ui->symbolOptions[2], 17, 6, 3, "6", 2, toggleStyleDefault);
 
-    if (!ui->columnsInput.isWriting) {
-        sprintf(ui->columnsInput.inputText, "%d", data->playSettings.columns);
+    panelDrawTextCentered(panel, -1, 8, "Taille de la grille", PASTEQUE_COLOR_WHITE);
+    drawToggleOption(panel, &ui->state, &ui->presetOptions[0], 2, 10, 22, "Petite (10x7)", 3, toggleStyleDefault);
+    drawToggleOption(panel, &ui->state, &ui->presetOptions[1], 2, 12, 22, "Moyenne (15x10)", 4, toggleStyleDefault);
+    drawToggleOption(panel, &ui->state, &ui->presetOptions[2], 2, 14, 22, "Grande (24x16)", 5, toggleStyleDefault);
+    drawToggleOption(panel, &ui->state, &ui->presetOptions[3], 2, 16, 22, "Personnalisée", 6, toggleStyleDefault);
+
+    // Update the text for width/height input boxes.
+    if (!ui->widthInput.isWriting) {
+        sprintf(ui->widthInput.inputText, "%d", data->playSettings.width);
     }
-    drawTextInput(panel, &ui->state, &ui->columnsInput, 5, 9, 4, 3, 3, textInputStyleDefault);
+    if (!ui->heightInput.isWriting) {
+        sprintf(ui->heightInput.inputText, "%d", data->playSettings.height);
+    }
+    drawTextInput(panel, &ui->state, &ui->widthInput, 5, 17, 4, 3, 7, textInputStyleDefault);
+    panelDrawLine(panel, 12, 17, 1, 'X', PASTEQUE_COLOR_WHITE);
+    drawTextInput(panel, &ui->state, &ui->heightInput, 16, 17, 4, 3, 8, textInputStyleDefault);
 
-    drawToggleOption(panel, &ui->state, &ui->playButton, 1, 11, panel->width - 2, "Démarrer !!", 4, toggleStyleButton);
+    drawToggleOption(panel, &ui->state, &ui->playButton, 1, 19, panel->width - 2, "Démarrer !!", 9, toggleStyleButton);
+    drawToggleOption(panel, &ui->state, &ui->backButton, 1, 21, panel->width - 2, "Annuler", 10,
+                     toggleStyleButton);
 }
 
 void selectSymbolOption(MainMenuData* data, ToggleOption* selected) {
-    for (int i = 0; i < 3; ++i) {
+    for (char i = 0; i < 3; ++i) {
         ToggleOption* option = &data->playUI.symbolOptions[i];
         if (option == selected) {
-            data->playSettings.symbols = i + 4;
+            data->playSettings.symbols = (char) (i + 4);
             option->toggled = true;
         } else {
             option->toggled = false;
@@ -124,32 +143,105 @@ void selectSymbolOption(MainMenuData* data, ToggleOption* selected) {
     }
 }
 
+void selectPresetOption(MainMenuData* data, ToggleOption* selected) {
+    for (int i = 0; i < 4; ++i) {
+        ToggleOption* option = &data->playUI.presetOptions[i];
+        if (option == selected) {
+            BoardSizePreset preset = (BoardSizePreset) i;
+            data->playSettings.sizePreset = preset;
+            if (preset != BSP_CUSTOM) {
+                boardGetPresetDimensions(preset, &data->playSettings.width, &data->playSettings.height);
+            }
+            option->toggled = true;
+        } else {
+            option->toggled = false;
+        }
+    }
+}
+
+void registerWidthInput(MainMenuData* data, TextInput* input) {
+    // Convert to a number
+    char* parseResult;
+    long width = strtol(input->inputText, &parseResult, 10);
+
+    // Make sure parsing is successful.
+    if (parseResult != input->inputText && data->playSettings.width != width) {
+        // Clamp the width
+        if (width < 3) { width = 3; }
+        else if (width > BOARD_WIDTH_MAX) { width = BOARD_WIDTH_MAX; }
+
+        data->playSettings.width = width;
+
+        // Make sure we have CUSTOM preset
+        selectPresetOption(data, &data->playUI.presetOptions[3]);
+    }
+}
+
+// Same for height
+void registerHeightInput(MainMenuData* data, TextInput* input) {
+    // Convert to a number
+    char* parseResult;
+    long height = strtol(input->inputText, &parseResult, 10);
+
+    // Make sure parsing is successful.
+    if (parseResult != input->inputText && data->playSettings.height != height) {
+        // Clamp the width
+        if (height < 3) { height = 3; }
+        else if (height > BOARD_HEIGHT_MAX) { height = BOARD_HEIGHT_MAX; }
+
+        data->playSettings.height = height;
+
+        // Make sure we have CUSTOM preset
+        selectPresetOption(data, &data->playUI.presetOptions[3]);
+    }
+}
+
+void switchSubMenu(MainMenuData* data, Panel* panel, UIState* state) {
+    // Switch off all other submenus (except the mainUI panel)
+    data->playUI.state.focused = false;
+    data->playPanel->visible = false;
+    data->mainUI.state.focused = false;
+
+    // Switch on the specified submenu.
+    panel->visible = true;
+    state->focused = true;
+    state->selectedIndex = 0; // Reset the index to the default one.
+}
+
 // -----------------------------------------------
 // GAME LIFECYCLE FUNCTIONS
 // -----------------------------------------------
 
 void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
+    // MAIN UI (Title, Subtitle, Play, High Scores, Quit)
+    // --------------------------------------------------------
     PanelAdornment adorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_WHITE);
     data->titlePanel = gsAddPanel(gameState, 2, 2, TITLE_WIDTH + TITLE_MARGIN, TITLE_HEIGHT + TITLE_MARGIN, adorn,
                                   &drawTitlePanel, NULL);
     data->subtitlePanel = gsAddPanel(gameState, 2, 11, 30, 2, noneAdornment, &drawSubtitlePanel, NULL);
 
     data->mainUIPanel = gsAddPanel(gameState, 4, 14, 26, 10, noneAdornment, &drawMainUI, data);
-    data->mainUI.state.focused = false; // temp!
+    data->mainUI.state.focused = true;
 
+    // PLAY SUBMENU (Symbols, dimensions)
+    // --------------------------------------------------------
     PanelAdornment sideAdorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_BLUE);
     sideAdorn.colorPairOverrideV = PASTEQUE_COLOR_BLUE_ON_WHITE;
     sideAdorn.colorPairOverrideStartY = 0;
     sideAdorn.colorPairOverrideEndY = 2;
-    data->playPanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 26, 18,
+    data->playPanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 26, 23,
                                  sideAdorn, &drawSidePanel, data);
 
-    data->playUI.state.focused = true;
+    data->playPanel->visible = false;
+    data->playUI.state.focused = false;
     data->playUI.symbolOptions[0].toggled = true;
+    data->playUI.presetOptions[1].toggled = true;
 
+    // PLAY SETTINGS CONFIG
+    // --------------------------------------------------------
+    data->playSettings.sizePreset = BSP_MEDIUM;
+    boardGetPresetDimensions(BSP_MEDIUM, &data->playSettings.width, &data->playSettings.height);
     data->playSettings.symbols = 4;
-    data->playSettings.columns = 12;
-    data->playSettings.rows = 8;
 }
 
 void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned long deltaTime) {
@@ -161,16 +253,13 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
 
     // We're in the main UI buttons
     if (mainUI->state.focused) {
-        // Move the selected button when pressing arrow keys or ZQSD.
-        if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && mainUI->state.selectedIndex < 2) {
-            mainUI->state.selectedIndex++;
-        } else if ((pEvent->code == KEY_UP || pEvent->code == KEY_Z) && mainUI->state.selectedIndex > 0) {
-            mainUI->state.selectedIndex--;
-        }
+        // Add keyboard navigation (down and up arrows keys, Z and S keys)
+        UINavBlock blocks[] = {{0, 2, ND_VERTICAL}};
+        uiKeyboardNav(&mainUI->state, pEvent, blocks, 1);
 
         // Handle any button click.
         if (handleToggleOptionEvent(&mainUI->state, &mainUI->playButton, pEvent)) {
-            gsSwitchScene(gameState, SN_CRUSH, makeCrushData(12, 8, 4, CIM_ALL));
+            switchSubMenu(data, data->playPanel, &data->playUI.state);
             return;
         } else if (handleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {
             // TODO: High scores maybe??
@@ -178,38 +267,56 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             gsQuitGame(gameState);
         }
     } else if (playUI->state.focused) { // In the play side panel
-        // When in the symbols, use left and right to navigate through them.
-        // Bottom arrow key should be used to go in the options block below.
-        if (handleTextInputEvent(&playUI->state, &playUI->columnsInput, pEvent)) {
-            // Handled!
+        // Text input events should be first so they get the maximum priority.
+        if (handleTextInputEvent(&playUI->state, &playUI->widthInput, pEvent)) {
+            if (!playUI->widthInput.isWriting) {
+                // We're done writing.
+                registerWidthInput(data, &playUI->widthInput);
+            }
+            return;
         }
-        else if (playUI->state.selectedIndex >= 0 && playUI->state.selectedIndex <= 2) {
-            if ((pEvent->code == KEY_LEFT || pEvent->code == KEY_Q) && playUI->state.selectedIndex > 0) {
-                playUI->state.selectedIndex--;
-            } else if ((pEvent->code == KEY_RIGHT || pEvent->code == KEY_D) && playUI->state.selectedIndex < 2) {
-                playUI->state.selectedIndex++;
+        if (handleTextInputEvent(&playUI->state, &playUI->heightInput, pEvent)) {
+            if (!playUI->heightInput.isWriting) {
+                // We're done writing.
+                registerHeightInput(data, &playUI->heightInput);
             }
-            if (pEvent->code == KEY_DOWN || pEvent->code == KEY_S) {
-                playUI->state.selectedIndex = 3; // The first control below.
-            }
-        } else {
-            if (pEvent->code == KEY_UP || pEvent->code == KEY_Z) {
-                playUI->state.selectedIndex--;
-            } else if ((pEvent->code == KEY_DOWN || pEvent->code == KEY_S) && playUI->state.selectedIndex < 4) {
-                playUI->state.selectedIndex++;
-            }
+            return;
         }
+
+        // Add keyboard navigation for multiple blocks:
+        UINavBlock blocks[] = {
+                {0, 2,  ND_HORIZONTAL}, // Symbol count (4, 5, 6)
+                {3, 6,  ND_VERTICAL}, // Presets (S, M, L, Custom)
+                {7, 8,  ND_HORIZONTAL}, // Width and Height input
+                {9, 10, ND_VERTICAL} // Play and Back buttons
+        };
+        uiKeyboardNav(&playUI->state, pEvent, blocks, 4);
 
         for (int i = 0; i < 3; ++i) {
             ToggleOption* option = &playUI->symbolOptions[i];
             if (handleToggleOptionEvent(&playUI->state, option, pEvent)) {
                 selectSymbolOption(data, option);
+                return;
             }
         }
-        
+
+        for (int i = 0; i < 4; ++i) {
+            ToggleOption* option = &playUI->presetOptions[i];
+            if (handleToggleOptionEvent(&playUI->state, option, pEvent)) {
+                selectPresetOption(data, option);
+                return;
+            }
+        }
+
         if (handleToggleOptionEvent(&playUI->state, &playUI->playButton, pEvent)) {
-            struct PlaySettings params = data->playSettings;
-            gsSwitchScene(gameState, SN_CRUSH, makeCrushData(params.columns, params.rows, params.symbols, CIM_ALL));
+            PlaySettings params = data->playSettings;
+            CrushData* crush = makeCrushData(params.sizePreset, params.width, params.height, params.symbols, CIM_ALL);
+            gsSwitchScene(gameState, SN_CRUSH, crush);
+            return;
+        }
+
+        if (handleToggleOptionEvent(&playUI->state, &playUI->backButton, pEvent)) {
+            switchSubMenu(data, data->mainUIPanel, &mainUI->state);
         }
     }
 }

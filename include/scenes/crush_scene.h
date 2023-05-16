@@ -2,6 +2,7 @@
 #define PROJET_PASTEQUE_CRUSH_SCENE_H
 
 #include "game_state.h"
+#include "board.h"
 
 /**
  * The input settings for a player.
@@ -23,7 +24,7 @@ struct CrushData_S; // Defined in crush_scene.c
 typedef struct CrushData_S CrushData;
 
 // TODO: Multiple players? Custom input method?
-CrushData* makeCrushData(int width, int height, char symbols, CrushInputMethod inputMethod);
+CrushData* makeCrushData(BoardSizePreset sizePreset, int width, int height, char symbols, CrushInputMethod inputMethod);
 
 void crushInit(PastequeGameState* gameState, CrushData* data);
 

@@ -13,8 +13,8 @@
 #define MAX_PANELS 32
 
 // Those won't need to change dynamically. We can get some profit from that (2D arrays).
-#define SCREEN_WIDTH 96
-#define SCREEN_HEIGHT 54
+#define SCREEN_WIDTH 200
+#define SCREEN_HEIGHT 100
 
 /**
  * The game state, containing all the panels and the current scene.

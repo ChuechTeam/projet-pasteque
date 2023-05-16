@@ -63,6 +63,17 @@ typedef struct {
     bool focused;
 } UIState;
 
+typedef enum {
+    ND_HORIZONTAL,
+    ND_VERTICAL
+} NavigationDirection;
+
+typedef struct {
+    int startIndex;
+    int endIndex;
+    NavigationDirection direction;
+} UINavBlock;
+
 static ToggleOptionStyle toggleStyleDefault = {PASTEQUE_COLOR_WHITE,
                                                PASTEQUE_COLOR_LIGHT_BLUE_BG,
                                                PASTEQUE_COLOR_BLACK,
@@ -86,5 +97,8 @@ void drawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y,
                    TextInputStyle style);
 
 bool handleTextInputEvent(UIState* state, TextInput* input, Event* event);
+
+// End is inclusive!
+void uiKeyboardNav(UIState* state, Event* event, UINavBlock blocks[], int nBlocks);
 
 #endif //PROJET_PASTEQUE_UI_H

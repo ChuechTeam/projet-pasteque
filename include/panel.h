@@ -73,6 +73,11 @@ typedef struct Panel_S {
      */
     int layer;
     /**
+     * True when the panel should be displayed on screen. Else, it is not displayed
+     * and its draw function isn't called.
+     */
+    bool visible;
+    /**
      * The style and color of the adornment drawn on the outside borner of the Panel.
      */
     PanelAdornment adornment;

@@ -3,9 +3,7 @@
 #include "libGameRGR2.h"
 #include "board.h"
 
-#define MAX_WIDTH 30
-#define MAX_HEIGHT 30
-#define LINE_END_AUTODETECT -1000
+#define LINE_END_AUTODETECT (-1000)
 
 // Define those earlier so we can use them in makeCrushBoard.
 bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY, int lineEnd);
@@ -14,8 +12,8 @@ void fillBoardRandom(CrushBoard* board, char symbols);
 
 void fillCellRandom(CrushBoard* board, char symbols, int x, int y, char additionalForbiddenSymbol);
 
-CrushBoard* makeCrushBoard(int width, int height, char symbols) {
-    if (width < 3 || height < 3 || width > MAX_WIDTH || height > MAX_HEIGHT) {
+CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, char symbols) {
+    if (sizePreset == BSP_CUSTOM && (width < 3 || height < 3 || width > BOARD_WIDTH_MAX || height > BOARD_HEIGHT_MAX)) {
         RAGE_QUIT(2000, "Invalid Crush array dimensions (width, height) = (%d, %d)", width, height);
     }
     if (symbols < 4 || symbols > 6) {
@@ -26,8 +24,14 @@ CrushBoard* makeCrushBoard(int width, int height, char symbols) {
     if (board == NULL) {
         RAGE_QUIT(2001, "Failed to allocate CrushData.");
     }
-    board->height = height;
-    board->width = width;
+    board->sizePreset = sizePreset;
+    if (sizePreset == BSP_CUSTOM) {
+        board->height = height;
+        board->width = width;
+    } else {
+        // Enforce the preset dimensions.
+        boardGetPresetDimensions(sizePreset, &board->width, &board->height);
+    }
     board->cellCount = cellCount;
     // data->cells has already been initialized since we've allocated enough space using malloc.
 
@@ -250,8 +254,7 @@ bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY, in
     if (lineEnd != LINE_END_AUTODETECT) {
         // Use X or Y depending on offsetX or offsetY values.
         isFinalCell = offsetX != 0 ? x == lineEnd : y == lineEnd;
-    }
-    else if (offsetX > 0) {
+    } else if (offsetX > 0) {
         isFinalCell = (x == board->width - 1);
     } else if (offsetX < 0) {
         isFinalCell = (x == 0);
@@ -304,7 +307,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
 
             // Find previous cells A A A B B [A A] A
             while (endX > startX) {
-                if (lineContinues(board, endX-1, y, -1, 0, LINE_END_AUTODETECT)) {
+                if (lineContinues(board, endX - 1, y, -1, 0, LINE_END_AUTODETECT)) {
                     endX--;
                     length++;
                 } else {
@@ -365,7 +368,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
 
             // Find previous cells A A A B B [A A] A (vertically)
             while (endY > startY) {
-                if (lineContinues(board, x, endY-1, 0, -1, LINE_END_AUTODETECT)) {
+                if (lineContinues(board, x, endY - 1, 0, -1, LINE_END_AUTODETECT)) {
                     endY--;
                     length++;
                 } else {
@@ -552,13 +555,13 @@ bool boardAnySwapPossible(CrushBoard* board) {
             // Left to right swap
             if (x != board->width - 1) {
                 // Use the true parameter in alwaysRevert to not actually swap the cells
-                if (boardSwapCells(board, (Point){x, y}, (Point){x + 1, y}, true) == SR_SUCCESS) {
+                if (boardSwapCells(board, (Point) {x, y}, (Point) {x + 1, y}, true) == SR_SUCCESS) {
                     return true;
                 }
             }
             // Top to bottom swap
             if (y != board->height - 1) {
-                if (boardSwapCells(board, (Point){x, y}, (Point){x, y+1}, true) == SR_SUCCESS) {
+                if (boardSwapCells(board, (Point) {x, y}, (Point) {x, y + 1}, true) == SR_SUCCESS) {
                     return true;
                 }
             }
@@ -567,4 +570,23 @@ bool boardAnySwapPossible(CrushBoard* board) {
 
     // No swap found at all.
     return false;
+}
+
+void boardGetPresetDimensions(BoardSizePreset preset, int* outWidth, int* outHeight) {
+    switch (preset) {
+        case BSP_CUSTOM:
+            break; // Nothing to set.
+        case BSP_SMALL:
+            *outWidth = 10;
+            *outHeight = 7;
+            break;
+        case BSP_MEDIUM:
+            *outWidth = 15;
+            *outHeight = 10;
+            break;
+        case BSP_LARGE:
+            *outWidth = 24;
+            *outHeight = 16;
+            break;
+    }
 }
