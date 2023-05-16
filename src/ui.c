@@ -95,7 +95,6 @@ bool handleTextInputEvent(UIState* state, TextInput* input, Event* event) {
     if (input->isWriting) {
         if (event->code == KEY_RETURN) {
             input->isWriting = false;
-            nocbreak();
         } else {
             int length = (int)strlen(input->inputText);
             if (event->code == KEY_BACKSPACE) {
@@ -113,7 +112,6 @@ bool handleTextInputEvent(UIState* state, TextInput* input, Event* event) {
     } else if (state->focused && input->interactionIndex == state->selectedIndex) {
         if (event->code == KEY_RETURN) {
             input->isWriting = true;
-            cbreak();
             return true;
         }
     }
