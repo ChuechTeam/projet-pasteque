@@ -88,15 +88,15 @@ static TextInputStyle textInputStyleDefault = {PASTEQUE_COLOR_BLACK,
                                                PASTEQUE_COLOR_LIGHT_BLUE_BG,
                                                PASTEQUE_COLOR_TURQUOISE_BG};
 
-void drawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width, char* text,
-                      int interactionIndex, ToggleOptionStyle style);
+void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width, char* text,
+                        int interactionIndex, ToggleOptionStyle style);
 // True when toggled
-bool handleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event);
+bool uiHandleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event);
 
-void drawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength, int interactionIndex,
-                   TextInputStyle style);
+void uiDrawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength, int interactionIndex,
+                     TextInputStyle style);
 
-bool handleTextInputEvent(UIState* state, TextInput* input, Event* event);
+bool uiHandleTextInputEvent(UIState* state, TextInput* input, Event* event);
 
 // End is inclusive!
 void uiKeyboardNav(UIState* state, Event* event, UINavBlock blocks[], int nBlocks);

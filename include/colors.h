@@ -35,6 +35,7 @@ typedef int ColorId;
 
 // Supplementary specific background/foreground colors
 #define PASTEQUE_COLOR_BLUE_ON_WHITE PASTEQUE_EXT_COLOR(50)
+#define PASTEQUE_COLOR_WHITE_ON_WHITE PASTEQUE_EXT_COLOR(51)
 
 /**
  * Initializes all the color and color pairs. Must be called in init.

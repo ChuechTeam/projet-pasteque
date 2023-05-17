@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <errno.h>
 #include "libGameRGR2.h"
 #include "board.h"
 
@@ -25,6 +27,7 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
         RAGE_QUIT(2001, "Failed to allocate CrushData.");
     }
     board->sizePreset = sizePreset;
+    board->symbols = symbols;
     if (sizePreset == BSP_CUSTOM) {
         board->height = height;
         board->width = width;
@@ -33,6 +36,7 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
         boardGetPresetDimensions(sizePreset, &board->width, &board->height);
     }
     board->cellCount = cellCount;
+    board->score = 0;
     // data->cells has already been initialized since we've allocated enough space using malloc.
 
     // Fill with random values
@@ -274,13 +278,13 @@ bool lineContinues(CrushBoard* board, int x, int y, int offsetX, int offsetY, in
     return cur.sym == next.sym;
 }
 
-bool boardMarkAlignedCells(CrushBoard* board, int* score) {
+bool boardMarkAlignedCells(CrushBoard* board) {
     if (board == NULL) {
         RAGE_QUIT(2002, "Crush board is NULL.");
     }
 
     int length = 1;
-    int prevScore = *score;
+    int prevScore = board->score;
 
     for (int y = 0; y < board->height; y++) {
         CrushCell* firstCell = &CELL(board, 0, y);
@@ -323,7 +327,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
                 for (int xe = board->width; xe >= endX; xe--) {
                     CELL(board, xe - 1, y).markedForDestruction = true;
                 }
-                *score += points(length);
+                board->score += points(length);
             }
         }
 
@@ -338,7 +342,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
                     for (int k = 0; k < length; k++) {
                         CELL(board, x - k, y).markedForDestruction = true;
                     }
-                    *score += points(length);
+                    board->score += points(length);
                 }
                 length = 1;
             }
@@ -384,7 +388,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
                 for (int ye = board->height; ye >= endY; ye--) {
                     CELL(board, x, ye - 1).markedForDestruction = true;
                 }
-                *score += points(length);
+                board->score += points(length);
             }
 
             length = 1;
@@ -398,7 +402,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
                     for (int k = 0; k < length; k++) {
                         CELL(board, x, y - k).markedForDestruction = true;
                     }
-                    *score += points(length);
+                    board->score += points(length);
                 }
                 length = 1;
             }
@@ -406,7 +410,7 @@ bool boardMarkAlignedCells(CrushBoard* board, int* score) {
     }
 
     // If the score has changed, then we have destroyed some cells in the process.
-    return prevScore != *score;
+    return prevScore != board->score;
 }
 
 // Returns true when replacing the given cell is within a line.
@@ -589,4 +593,193 @@ void boardGetPresetDimensions(BoardSizePreset preset, int* outWidth, int* outHei
             *outHeight = 16;
             break;
     }
+}
+
+bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]) {
+    FILE* file = fopen(path, "w");
+    if (file == NULL) {
+        snprintf(errorMessage, 256, "Échec de l'ouverture du fichier, code d'erreur %d :\n%s\n(Chemin : %s)",
+                 errno, strerror(errno), path);
+        return false;
+    }
+    bool success = true;
+    success &= fprintf(file, "width=%d\n", board->width) != EOF;
+    success &= fprintf(file, "height=%d\n", board->height) != EOF;
+    success &= fprintf(file, "preset=%d\n", board->sizePreset) != EOF;
+    success &= fprintf(file, "symbols=%hhd\n", board->symbols) != EOF;
+    success &= fprintf(file, "score=%d\n", board->score) != EOF;
+    success &= fprintf(file, "cells:\n") != EOF;
+    for (int y = 0; y < board->height; ++y) {
+        for (int x = 0; x < board->width; ++x) {
+            success &= fprintf(file, "%hhd", CELL(board, x, y).sym) != EOF;
+            if (x != board->width - 1) {
+                success &= fputc(' ', file) != EOF;
+            }
+        }
+        if (y != board->height - 1) {
+            success &= fputc('\n', file) != EOF;
+        }
+    }
+    fclose(file);
+
+    if (!success) {
+        if (ferror(file)) {
+            snprintf(errorMessage, 256,
+                     "Échec lors de l'écriture dans le fichier, code d'erreur %d :\n%s\n(Chemin : %s)",
+                     errno, strerror(errno), path);
+        } else {
+            snprintf(errorMessage, 256,
+                     "Erreur inconnue lors de l'écriture dans le fichier\n(Chemin : %s)", path);
+        }
+    }
+
+    return success;
+}
+
+bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessage) {
+    FILE* file = fopen(path, "r");
+    if (file == NULL) {
+        if (errno == ENOENT) {
+            snprintf(errorMessage, 256, "Fichier introuvable\n(Chemin: %s)", path);
+        } else {
+            snprintf(errorMessage, 256, "Échec de l'ouverture du fichier, code d'erreur %d :\n%s\n(Chemin : %s)",
+                     errno, strerror(errno), path);
+        }
+        return false;
+    }
+
+    CrushBoard* createdBoard = NULL;
+    int width = -1, height = -1, score = -1;
+    char symbols = 0;
+    BoardSizePreset preset = -1;
+    bool error = false;
+    bool fileError = false;
+    bool parseCells = false;
+    char line[256];
+
+    while (!error && !parseCells) {
+        if (!fgets(line, 256, file)) {
+            error = true;
+            fileError = true;
+        } else if (width == -1 && sscanf(line, "width=%d", &width)) {
+            // Parsed.
+        } else if (height == -1 && sscanf(line, "height=%d", &height)) {
+            // Parsed.
+        } else if (score == -1 && sscanf(line, "score=%d", &score)) {
+            // Parsed.
+        } else if (symbols == 0 && sscanf(line, "symbols=%hhd", &symbols)) {
+            // Parsed
+        } else if (preset == -1 && sscanf(line, "preset=%d", (int*)&preset)) {
+            // Parsed
+        } else if (strcmp(line, "cells:\n") == 0) {
+            parseCells = true;
+        } else {
+            error = true;
+            snprintf(errorMessage, 256, "Ligne invalide");
+        }
+    }
+
+    // Validate all other values beforehand
+    if (!error) {
+        if (width < 3 || height < 3 || width > BOARD_WIDTH_MAX || height > BOARD_HEIGHT_MAX) {
+            error = true;
+            snprintf(errorMessage, 256, "Dimensions invalides (L, H) = (%d, %d)", width, height);
+        } else if (score < 0) {
+            error = true;
+            snprintf(errorMessage, 256, "Score invalide (%d)", score);
+        } else if (symbols < 4 || symbols > 6) {
+            error = true;
+            snprintf(errorMessage, 256, "Nombre de symboles invalide (%hhd)", symbols);
+        } else if (preset < BSP_SMALL || preset > BSP_CUSTOM) {
+            error = true;
+            snprintf(errorMessage, 256, "Taille prédéfinie invalide (%hhd)", symbols);
+        } else if (preset != BSP_CUSTOM) {
+            int presetW, presetH;
+            boardGetPresetDimensions(preset, &presetW, &presetH);
+            if (width != presetW || height != presetH) {
+                error = true;
+                snprintf(errorMessage, 256,
+                         "Dimensions non correspondantes à la taille prédéfinie (%d, %d) != (%d, %d)",
+                         width, height, presetW, presetH);
+            }
+        }
+    }
+
+    // Allocate the crush board
+    if (!error) {
+        int cellCount = width * height;
+        createdBoard = calloc(1, sizeof(CrushBoard) + sizeof(CrushCell) * cellCount);
+        if (createdBoard == NULL) {
+            error = true;
+            snprintf(errorMessage, 256, "Mémoire insuffisante pour créer le tableau.");
+        } else {
+            createdBoard->width = width;
+            createdBoard->height = height;
+            createdBoard->sizePreset = preset;
+            createdBoard->symbols = symbols;
+            createdBoard->score = score;
+            createdBoard->cellCount = cellCount;
+        }
+    }
+
+    int y = 0;
+    while (!error && y < height) {
+        int x = 0;
+        char* cursor = line;
+
+        if (!fgets(line, 256, file)) {
+            error = true;
+            fileError = true;
+        }
+
+        while (!error && x < width) {
+            char* prevCursor = cursor;
+
+            long symbol = strtol(cursor, &cursor, 10);
+            if (prevCursor == cursor) {
+                error = true;
+                snprintf(errorMessage, 256, "Impossible de lire un nombre entier dans la grille");
+            } else if (symbol < 0 || symbol > 6) {
+                error = true;
+                snprintf(errorMessage, 256, "Symbole invalide (%ld)", symbol);
+            } else {
+                CELL(createdBoard, x, y).sym = (char) symbol;
+                x++;
+            }
+        }
+
+        if (!error) {
+            y++;
+        }
+    }
+
+    if (!error && y != height) {
+        error = true;
+        snprintf(errorMessage, 256, "Lignes manquantes dans la grille (y=%d)", y);
+    }
+
+    // Conclude!
+    if (!error) {
+        *outBoard = createdBoard;
+    } else {
+        if (createdBoard != NULL) {
+            free(createdBoard);
+        }
+        *outBoard = NULL;
+
+        if (fileError) {
+            if (feof(file)) {
+                snprintf(errorMessage, 256, "Fin du fichier atteinte prématurément.");
+            } else {
+                snprintf(errorMessage, 256,
+                         "Erreur lors de la lecture du fichier, code d'erreur %d :\n%s\n(Chemin : %s)",
+                         errno, strerror(errno), path);
+            }
+        } else {
+            // Error message already filled.
+        }
+    }
+
+    fclose(file);
+    return !error;
 }

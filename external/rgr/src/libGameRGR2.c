@@ -102,14 +102,16 @@ void gameLoop(GameData* pGame){
     mouseinterval(0);
     // Enable all mouse events for using XTerm control sequences.
     // This solution works for some terminals, but not all of them.
-    // TODO: Override the TERM env with a modded terminfo with both 256color and 1003.
     // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h2-Mouse-Tracking
     printf("\033[?1003h");
     fflush(stdout);
 #if USE_CURSES_KEYPAD
     keypad(stdscr, TRUE);
 #endif
-    init_pair(1, 7, 0);   
+    init_pair(1, 7, 0);
+
+    // PASTEQUE MOD: Update the width and height of the terminal window.
+    getmaxyx(pWin, pScr->height, pScr->width);
 
     // Call init here
     pCb->cbInit(pDat, pScr);
@@ -121,6 +123,8 @@ void gameLoop(GameData* pGame){
     // START of game loop
     //=======================================
     while(loop==0){
+        // PASTEQUE MOD: Update the width and height of the terminal window.
+        getmaxyx(pWin, pScr->height, pScr->width);
         
         //--------------------------
         // (call event if needed)

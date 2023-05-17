@@ -18,8 +18,8 @@ bool mouseClick(Event* event) {
     return event->code == KEY_MOUSE && (event->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0;
 }
 
-void drawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width,
-                      char* text, int interactionIndex, ToggleOptionStyle style) {
+void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width,
+                        char* text, int interactionIndex, ToggleOptionStyle style) {
     if (!option->initialized) {
         option->x = x;
         option->y = y;
@@ -46,11 +46,10 @@ void drawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x,
     panelDrawText(panel, option->x + textX, option->y, option->text, color);
 }
 
-bool handleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event) {
+bool uiHandleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event) {
     if (!state->focused) {
         return false;
     }
-
 
     // Highlight the button when the cursor goes over it.
     if (mouseIntersect(option->panel, event, option->x, option->y, option->width, 1)) {
@@ -68,8 +67,8 @@ bool handleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event)
     return false;
 }
 
-void drawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength,
-                   int interactionIndex, TextInputStyle style) {
+void uiDrawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength,
+                     int interactionIndex, TextInputStyle style) {
     if (!input->initialized) {
         input->x = x;
         input->y = y;
@@ -95,7 +94,7 @@ void drawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y,
     panelDrawText(panel, input->x, input->y, input->inputText, color);
 }
 
-bool handleTextInputEvent(UIState* state, TextInput* input, Event* event) {
+bool uiHandleTextInputEvent(UIState* state, TextInput* input, Event* event) {
     bool mouseHover = mouseIntersect(input->panel, event, input->x, input->y, input->width, 1);
 
     if (input->isWriting) {
@@ -104,7 +103,7 @@ bool handleTextInputEvent(UIState* state, TextInput* input, Event* event) {
             input->isWriting = false;
         } else {
             int length = (int) strlen(input->inputText);
-            if (event->code == KEY_BACKSPACE) {
+            if (event->code == KEY_BACKSPACE || event->code == 8) { // 8 = ASCII Backspace
                 if (length > 0) {
                     input->inputText[length - 1] = '\0';
                 }

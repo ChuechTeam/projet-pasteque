@@ -49,13 +49,15 @@ build: $(OUT)/projet_pasteque
 
 .PHONY: run
 run: build
-	@export LD_LIBRARY_PATH="$(LIBRARY_PATHS_ENV)";\
+	@export LD_LIBRARY_PATH="../$(LIBRARY_PATHS_ENV)";\
 	if [ $$TERM = "xterm-256color" ]; then\
 		# Setup the terminal for extended mouse support, if possible\
 		export TERMINFO=$(shell pwd)/terminfo/;\
 		export TERM="xterm-256color-mouse";\
   	fi;\
-  	./$(OUT)/projet_pasteque
+  	cd ./$(OUT);\
+  	./projet_pasteque;\
+  	cd ../
 
 .PHONY: clean
 clean:

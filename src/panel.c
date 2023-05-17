@@ -76,6 +76,7 @@ Panel constructPanel(int index, int x, int y, int width, int height,
     panel.index = index;
     panel.x = x;
     panel.y = y;
+    panel.layer = 0;
     panel.width = width;
     panel.height = height;
     panel.visible = true;
@@ -285,4 +286,27 @@ void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId) 
     }
 
     panelDrawText(pPanel, x, y, pText, clrId);
+}
+
+void panelCenterScreen(Panel* pPanel, bool centerX, bool centerY) {
+    if (pPanel == NULL) {
+        RAGE_QUIT(210, "Panel is NULL.");
+    }
+
+    int x = pPanel->x;
+    int y = pPanel->y;
+    if (centerX) {
+        x = (pPanel->pScreen->width - pPanel->width) / 2;
+        if (x < 0) {
+            x = 0;
+        }
+    }
+    if (centerY) {
+        y = (pPanel->pScreen->height - pPanel->height) / 2;
+        if (y < 0) {
+            y = 0;
+        }
+    }
+
+    panelTranslate(pPanel, x, y);
 }

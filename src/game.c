@@ -89,7 +89,8 @@ int main() {
     cb.cbFinish = &finish;
 
     PastequeGameState* gs = makeGameState();
-    GameData* game = createGame(SCREEN_WIDTH, SCREEN_HEIGHT, gs, &cb, 1);
+    // The two first parameters are useless now that we use getmaxyx.
+    GameData* game = createGame(20, 20, gs, &cb, 1);
     gameLoop(game);
     free(gs);
 }

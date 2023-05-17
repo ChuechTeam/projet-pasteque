@@ -34,9 +34,11 @@ typedef enum {
 
 typedef struct {
     BoardSizePreset sizePreset;
+    char symbols;
     int width;
     int height;
     int cellCount;
+    int score;
     // A malloc-allocated array of all the cells stored in a contiguous way.
     // The array starts with [width] elements of the first row. Then, the next row.
     // Repeat until we get to [height] rows. This is a row-major array.
@@ -77,13 +79,17 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
  */
 void boardDestroyMarked(CrushBoard* board);
 
-bool boardMarkAlignedCells(CrushBoard* board, int* score);
+bool boardMarkAlignedCells(CrushBoard* board);
 
 bool boardGravityTick(CrushBoard* board);
 
 SwapResult boardSwapCells(CrushBoard* board, Point posA, Point posB, bool alwaysRevert);
 
 bool boardAnySwapPossible(CrushBoard* board);
+
+bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]);
+
+bool boardReadFromFile(const char* path, CrushBoard** outBoard, char errorMessage[256]);
 
 Point boardCellIndexToPos(CrushBoard* board, int index);
 

@@ -169,6 +169,14 @@ void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId);
 void panelTranslate(Panel* pPanel, int x, int y);
 
 /**
+ * Centers the panel on one or more axis of the screen.
+ * @param pPanel the panel
+ * @param centerX true when the panel should be centered horizontally
+ * @param centerY true when the panel should be centered vertically
+ */
+void panelCenterScreen(Panel* pPanel, bool centerX, bool centerY);
+
+/**
  * Returns true if the panel contains the point (x, y), in screen space.
  *
  * @param pPanel the panel

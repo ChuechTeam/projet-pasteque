@@ -12,10 +12,6 @@
 // 32 panels should be enough. It's not like we're making a candy crush battle royale or something.
 #define MAX_PANELS 32
 
-// Those won't need to change dynamically. We can get some profit from that (2D arrays).
-#define SCREEN_WIDTH 200
-#define SCREEN_HEIGHT 100
-
 /**
  * The game state, containing all the panels and the current scene.
  */
