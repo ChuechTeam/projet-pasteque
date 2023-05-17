@@ -36,7 +36,6 @@ typedef struct {
     bool toggled;
 } ToggleOption;
 
-
 typedef struct {
     int inactiveColorId;
     int activeColorId;
@@ -93,7 +92,8 @@ void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int 
 // True when toggled
 bool uiHandleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event);
 
-void uiDrawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength, int interactionIndex,
+void uiDrawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int y, int width, int maxLength,
+                     int interactionIndex,
                      TextInputStyle style);
 
 bool uiHandleTextInputEvent(UIState* state, TextInput* input, Event* event);

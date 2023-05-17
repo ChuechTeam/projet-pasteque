@@ -26,6 +26,7 @@ struct CrushData_S {
     CrushBoard* board;
     CrushPlayState playState;
     unsigned long animTimeMicros;
+    bool paused;
 
     // MESSAGES
     char message[128];
@@ -247,9 +248,11 @@ void togglePause(CrushData* data) {
     if (data->playState != CPS_WAITING_INPUT && data->playState != CPS_GAME_OVER) {
         return;
     }
-    bool newState = !data->pauseUI.state.focused;
+    bool newState = !data->paused;
 
+    data->paused = newState;
     data->pauseUI.state.focused = newState;
+    data->pauseUI.state.selectedIndex = 0;
     data->pausePanel->visible = newState;
 }
 
@@ -275,50 +278,54 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
     data->pausePanel->visible = false;
     panelCenterScreen(data->pausePanel, true, true);
     gsMovePanelLayer(gameState, data->pausePanel, 1);
+
+    data->playState = CPS_EVALUATING_BOARD;
 }
 
 void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long deltaTime) {
-    if (data->playState == CPS_EVALUATING_BOARD) {
-        bool markedSomething = boardMarkAlignedCells(data->board);
+    if (!data->paused) {
+        if (data->playState == CPS_EVALUATING_BOARD) {
+            bool markedSomething = boardMarkAlignedCells(data->board);
 
-        if (markedSomething) {
-            data->playState = CPS_BLINKING;
-        } else if (boardAnySwapPossible(data->board)) {
-            data->playState = CPS_WAITING_INPUT;
-        } else {
-            gameOver(data);
-        }
-
-    } else if (data->playState == CPS_BLINKING) {
-        // Blinking color is handled in drawBoardPanel.
-        data->animTimeMicros += deltaTime;
-        if (data->animTimeMicros >= BLINKING_DURATION_MICROS) {
-            data->animTimeMicros = 0;
-
-            // Destroy all marked cells after blinking.
-            boardDestroyMarked(data->board);
-            data->playState = CPS_GRAVITY;
-        }
-    }
-    if (data->playState == CPS_GRAVITY) {
-        data->animTimeMicros += deltaTime;
-        if (data->animTimeMicros >= GRAVITY_PERIOD_MICROS) {
-            data->animTimeMicros = 0;
-
-            bool gravityDidSomething = boardGravityTick(data->board);
-            if (gravityDidSomething) {
-                // Continue once we reach GRAVITY_PERIOD_MICROS again.
+            if (markedSomething) {
+                data->playState = CPS_BLINKING;
+            } else if (boardAnySwapPossible(data->board)) {
+                data->playState = CPS_WAITING_INPUT;
             } else {
-                // Reevaluate the board if we have any chain reaction.
-                data->playState = CPS_EVALUATING_BOARD;
+                gameOver(data);
+            }
+
+        } else if (data->playState == CPS_BLINKING) {
+            // Blinking color is handled in drawBoardPanel.
+            data->animTimeMicros += deltaTime;
+            if (data->animTimeMicros >= BLINKING_DURATION_MICROS) {
+                data->animTimeMicros = 0;
+
+                // Destroy all marked cells after blinking.
+                boardDestroyMarked(data->board);
+                data->playState = CPS_GRAVITY;
             }
         }
-    }
+        if (data->playState == CPS_GRAVITY) {
+            data->animTimeMicros += deltaTime;
+            if (data->animTimeMicros >= GRAVITY_PERIOD_MICROS) {
+                data->animTimeMicros = 0;
 
-    // Update the message duration timer
-    if (data->messageDurationMicros > 0) {
-        data->messageDurationMicros -= (long) deltaTime;
-        if (data->messageDurationMicros < 0) { data->messageDurationMicros = 0; }
+                bool gravityDidSomething = boardGravityTick(data->board);
+                if (gravityDidSomething) {
+                    // Continue once we reach GRAVITY_PERIOD_MICROS again.
+                } else {
+                    // Reevaluate the board if we have any chain reaction.
+                    data->playState = CPS_EVALUATING_BOARD;
+                }
+            }
+        }
+
+        // Update the message duration timer
+        if (data->messageDurationMicros > 0) {
+            data->messageDurationMicros -= (long) deltaTime;
+            if (data->messageDurationMicros < 0) { data->messageDurationMicros = 0; }
+        }
     }
 
     // Make sure our modal panels are centered if the window size changes
