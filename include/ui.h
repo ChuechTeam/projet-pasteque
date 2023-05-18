@@ -74,18 +74,18 @@ typedef struct {
 } UINavBlock;
 
 static ToggleOptionStyle toggleStyleDefault = {PASTEQUE_COLOR_WHITE,
-                                               PASTEQUE_COLOR_LIGHT_BLUE_BG,
+                                               PASTEQUE_COLOR_WATERMELON_BG_DYN,
                                                PASTEQUE_COLOR_BLACK,
-                                               PASTEQUE_COLOR_TURQUOISE_BG};
+                                               PASTEQUE_COLOR_WATERMELON_BG_LIGHT_DYN};
 
 static ToggleOptionStyle toggleStyleButton = {PASTEQUE_COLOR_WHITE,
-                                              PASTEQUE_COLOR_LIGHT_BLUE_BG,
-                                              PASTEQUE_COLOR_LIGHT_BLUE_BG,
-                                              PASTEQUE_COLOR_LIGHT_BLUE_BG};
+                                              PASTEQUE_COLOR_WATERMELON_BG_DYN,
+                                              PASTEQUE_COLOR_WATERMELON_BG_DYN,
+                                              PASTEQUE_COLOR_WATERMELON_BG_DYN};
 
 static TextInputStyle textInputStyleDefault = {PASTEQUE_COLOR_BLACK,
-                                               PASTEQUE_COLOR_LIGHT_BLUE_BG,
-                                               PASTEQUE_COLOR_TURQUOISE_BG};
+                                               PASTEQUE_COLOR_WATERMELON_BG_DYN,
+                                               PASTEQUE_COLOR_WATERMELON_BG_LIGHT_DYN};
 
 void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width, char* text,
                         int interactionIndex, ToggleOptionStyle style);

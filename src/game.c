@@ -45,6 +45,7 @@ int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
     PastequeGameState* gs = pUserData;
 
     gs->gameTime += deltaTime;
+    colorsUpdateDynamic(gs->gameTime);
 
     if (gs->quitRequested) {
         return 1; // Stop!
@@ -78,7 +79,7 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    srand(time(NULL));
+    srand((unsigned int)time(NULL));
     printf("Projet Pasteque launched!\n");
 
     Callbacks cb;

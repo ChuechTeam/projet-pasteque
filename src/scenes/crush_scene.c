@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
 #include "colors.h"
 #include "board.h"
 #include "ui.h"
@@ -12,6 +13,7 @@
 #define MICROS(millis) (millis*MILLI_IN_MICROS)
 #define BLINKING_DURATION_MICROS MICROS(800L)
 #define GRAVITY_PERIOD_MICROS MICROS(160L)
+#define PI           3.14159265358979323846
 
 typedef enum {
     CPS_WAITING_INPUT,
@@ -40,6 +42,8 @@ struct CrushData_S {
     // The cells to highlight while swapping with the cursor
     Point swapNeighbors[4];
     int numSwapNeighbors;
+    Point mousePressPos;
+    bool mouseClickPending;
     CrushInputMethod inputMethod;
 
     // PANELS
@@ -166,6 +170,8 @@ void moveCursorDelta(CrushBoard* board, Point* cursor, int deltaX, int deltaY) {
 }
 
 void toggleCursorSwapping(CrushData* data) {
+    data->mouseClickPending = false;
+
     if (data->cursorSwapping) {
         data->cursorSwapping = false;
         for (int i = 0; i < data->numSwapNeighbors; ++i) {
@@ -208,6 +214,143 @@ void runCursorMoveAction(CrushData* data, int deltaX, int deltaY) {
                                MICROS(3000));
                 break;
         }
+    }
+}
+
+void registerMouseCursorMove(CrushData* data, int mouseX, int mouseY) {
+    // Panel cell pos is given by
+    // (x, y) = (panel->x + 2*x, panel->y + y)
+    if ((mouseX - data->boardPanel->x) % 2 != 0) {
+        // The cursor is in an empty space between cells. Don't do anything.
+        return;
+    }
+
+    int cellX = (mouseX - data->boardPanel->x) / 2;
+    int cellY = (mouseY - data->boardPanel->y);
+    if (cellX >= data->board->width || cellY >= data->board->height || cellX < 0 || cellY < 0) {
+        // Out of bounds.
+        return;
+    }
+
+    data->cursor.x = cellX;
+    data->cursor.y = cellY;
+}
+
+void registerMousePressed(CrushData* data, int mouseX, int mouseY) {
+    bool validClick;
+    if (data->cursorSwapping) {
+        // Any existing cell is "valid"
+        int boardX = (mouseX - data->boardPanel->x) / 2;
+        int boardY = (mouseY - data->boardPanel->y);
+        validClick = boardX >= 0 && boardY >= 0
+                     && boardX < data->board->width && boardY < data->board->height
+                     && ((mouseX - data->boardPanel->x) % 2) == 0;
+    } else {
+        // Only the cursor-selected cell is valid. When moving the mouse,
+        // the registerMouseCursorMove function moves the cursor using the mouse
+        // location.
+        validClick = mouseX == data->boardPanel->x + (data->cursor.x * 2)
+                     && mouseY == data->boardPanel->y + data->cursor.y;
+    }
+
+    if (validClick) {
+        data->mousePressPos.x = mouseX;
+        data->mousePressPos.y = mouseY;
+        if (!data->cursorSwapping) {
+            toggleCursorSwapping(data);
+        }
+    } else {
+        data->mousePressPos.x = -1;
+        data->mousePressPos.y = -1;
+        if (data->cursorSwapping) {
+            toggleCursorSwapping(data);
+        }
+    }
+}
+
+void registerMouseReleased(CrushData* data, int mouseX, int mouseY) {
+    if (data->cursorSwapping) {
+        if ((data->mousePressPos.x != mouseX || data->mousePressPos.y != mouseY) && data->mousePressPos.x != -1) {
+            // Cursor released on another cell.
+            int relativeX = mouseX - data->mousePressPos.x;
+            int relativeY = mouseY - data->mousePressPos.y;
+
+            int deltaX, deltaY;
+            if (relativeY == 0 || relativeX == 0) {
+                // Straight line, we can easily find the direction!
+                if (relativeX < 0) {
+                    deltaX = -1;
+                    deltaY = 0;
+                } else if (relativeX > 0) {
+                    deltaX = 1;
+                    deltaY = 0;
+                } else if (relativeY > 0) {
+                    deltaX = 0;
+                    deltaY = 1;
+                } else { // relativeY < 0
+                    deltaX = 0;
+                    deltaY = -1;
+                }
+            } else {
+                // Diagonal line, use polar coordinates to find the direction.
+                float radians = atan2f((float) relativeY, (float) relativeX);
+                // Convert to degrees for easier manipulation
+                float degrees;
+                if (radians < 0) {
+                    degrees = 360 + radians * 180 / (float) PI;
+                } else {
+                    degrees = radians * 180 / (float) PI;
+                }
+
+                if (degrees >= 315 && degrees <= 360 || degrees >= 0 && degrees <= 45) {
+                    deltaX = 1;
+                    deltaY = 0;
+                } else if (degrees >= 45 && degrees <= 135) {
+                    deltaX = 0;
+                    deltaY = 1;
+                } else if (degrees >= 135 && degrees <= 225) {
+                    deltaX = -1;
+                    deltaY = 0;
+                } else if (degrees >= 225 && degrees < 315) {
+                    deltaX = 0;
+                    deltaY = -1;
+                } else {
+                    debug("Failed to find the right delta! [rad=%f; deg=%f]\n", radians, degrees);
+                    deltaX = 0;
+                    deltaY = 0;
+                }
+            }
+
+            if (deltaY != 0 || deltaX != 0) {
+                runCursorMoveAction(data, deltaX, deltaY);
+            }
+        } else {
+            // Cursor probably released on the same cell.
+            if (data->mousePressPos.x != -1) { // Make sure it's valid
+                if (data->mouseClickPending) {
+                    // Check for the case where we're clicking on a neighbor
+                    // Typical situation: clicking on a cell, then clicking on the other cell
+                    for (int i = 0; i < data->numSwapNeighbors; ++i) {
+                        Point neighbor = data->swapNeighbors[i];
+                        int mx = neighbor.x * 2 + data->boardPanel->x;
+                        int my = neighbor.y + data->boardPanel->y;
+                        if (mx == mouseX && my == mouseY) {
+                            // The user clicked on a cell! Find the difference and we're done.
+                            runCursorMoveAction(data, neighbor.x - data->cursor.x, neighbor.y - data->cursor.y);
+                        }
+                    }
+                    // If that didn't work, cancel the action.
+                    // Typical situation: clicking on a cell, and cancel that by clicking anywhere else
+                    if (data->cursorSwapping) {
+                        toggleCursorSwapping(data);
+                    }
+                } else {
+                    data->mouseClickPending = true;
+                }
+            }
+        }
+        data->mousePressPos.x = -1;
+        data->mousePressPos.y = -1;
     }
 }
 
@@ -336,6 +479,7 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
     // Move the cursor according to input method settings
     const bool isZQSD = (data->inputMethod & CIM_ZQSD_SPACE_CURSOR) != 0;
     const bool isArrows = (data->inputMethod & CIM_ARROWS_ENTER_CURSOR) != 0;
+    const bool isMouse = (data->inputMethod & CIM_MOUSE) != 0;
     const KeyCode code = pEvent->code;
     PauseMenu* pauseUI = &data->pauseUI;
 
@@ -363,12 +507,22 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
                 runCursorMoveAction(data, 1, 0);
             } else if (isZQSD && code == KEY_SPACE || isArrows && code == KEY_RETURN) {
                 toggleCursorSwapping(data);
+            } else if (isMouse && code == KEY_MOUSE) {
+                MEVENT mouse = pEvent->mouseEvent;
+                if (!data->cursorSwapping) {
+                    registerMouseCursorMove(data, mouse.x, mouse.y);
+                }
+                if ((pEvent->mouseEvent.bstate & (BUTTON1_PRESSED | BUTTON3_PRESSED)) != 0) {
+                    registerMousePressed(data, mouse.x, mouse.y);
+                } else if ((pEvent->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0) {
+                    registerMouseReleased(data, mouse.x, mouse.y);
+                }
             }
         }
         if (code == KEY_P) {
             togglePause(data);
         }
-        if (code == KEY_S) {
+        if (code == KEY_N) {
             saveGame(data);
         }
     }

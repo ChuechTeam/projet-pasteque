@@ -71,10 +71,13 @@ MainMenuData* makeMainMenuData() {
 // --------------------------------------------------------
 
 void drawTitlePanel(Panel* panel, PastequeGameState* gameState, void* osef) {
-    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF, TitleAsciiArtL1, PASTEQUE_COLOR_WHITE);
-    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 1, TitleAsciiArtL2, PASTEQUE_COLOR_WHITE);
-    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 2, TitleAsciiArtL3, PASTEQUE_COLOR_WHITE);
-    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 3, TitleAsciiArtL4, PASTEQUE_COLOR_WHITE);
+    for (int i = 0; i < panel->height; ++i) {
+        panelDrawLine(panel, 0, i, panel->width, ' ', PASTEQUE_COLOR_WATERMELON_BG_DYN);
+    }
+    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF, TitleAsciiArtL1, PASTEQUE_COLOR_WATERMELON_BG_DYN);
+    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 1, TitleAsciiArtL2, PASTEQUE_COLOR_WATERMELON_BG_DYN);
+    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 2, TitleAsciiArtL3, PASTEQUE_COLOR_WATERMELON_BG_DYN);
+    panelDrawText(panel, TITLE_MARGIN_HALF, TITLE_MARGIN_HALF + 3, TitleAsciiArtL4, PASTEQUE_COLOR_WATERMELON_BG_DYN);
 }
 
 void drawSubtitlePanel(Panel* panel, PastequeGameState* gameState, void* osef) {
@@ -93,7 +96,7 @@ void drawMainUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
 
     // Draw the little arrow on the left.
     if (ui->state.focused) {
-        panelDrawText(panel, 0, ui->state.selectedIndex * 2, ArrowRight, PASTEQUE_COLOR_TURQUOISE);
+        panelDrawText(panel, 0, ui->state.selectedIndex * 2, ArrowRight, PASTEQUE_COLOR_WATERMELON_DYN);
     }
 }
 
@@ -229,6 +232,9 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
     // MAIN UI (Title, Subtitle, Play, High Scores, Quit)
     // --------------------------------------------------------
     PanelAdornment adorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_WHITE);
+    adorn.colorPairOverrideV = PASTEQUE_COLOR_WHITE_ON_WATERMELON_DYN;
+    adorn.colorPairOverrideEndY = 100;
+
     data->titlePanel = gsAddPanel(gameState, 2, 2, TITLE_WIDTH + TITLE_MARGIN, TITLE_HEIGHT + TITLE_MARGIN, adorn,
                                   &drawTitlePanel, NULL);
     data->subtitlePanel = gsAddPanel(gameState, 2, 11, 30, 2, noneAdornment, &drawSubtitlePanel, NULL);
@@ -238,8 +244,8 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
 
     // PLAY SUBMENU (Symbols, dimensions)
     // --------------------------------------------------------
-    PanelAdornment sideAdorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_BLUE);
-    sideAdorn.colorPairOverrideV = PASTEQUE_COLOR_BLUE_ON_WHITE;
+    PanelAdornment sideAdorn = makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_WHITE);
+    sideAdorn.colorPairOverrideV = PASTEQUE_COLOR_WHITE_ON_WHITE;
     sideAdorn.colorPairOverrideStartY = 0;
     sideAdorn.colorPairOverrideEndY = 2;
     data->playPanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 26, 23,

@@ -10,7 +10,7 @@ OUT = build-make
 INCLUDE_DIRS = include external/rgr/inc
 INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 # Add any library here
-LDLIBS = GameRGR2 ncursesw
+LDLIBS = GameRGR2 ncursesw m
 LDFLAGS += $(addprefix -l, $(LDLIBS))
 LIBRARY_PATHS = external/rgr/lib
 # This is for LD_LIBRARY_PATH. Add the : infix if we have multiple libraries.

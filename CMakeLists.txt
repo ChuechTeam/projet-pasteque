@@ -32,6 +32,9 @@ set(SOURCE_FILES
 add_executable(projet_pasteque ${SOURCE_FILES})
 add_common_compile_options(projet_pasteque)
 target_link_libraries(projet_pasteque GameRGR2)
+if (UNIX)
+    target_link_libraries(projet_pasteque m)
+endif ()
 target_include_directories(projet_pasteque PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
         $<INSTALL_INTERFACE:include/>)

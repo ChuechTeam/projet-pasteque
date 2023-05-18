@@ -37,9 +37,17 @@ typedef int ColorId;
 #define PASTEQUE_COLOR_BLUE_ON_WHITE PASTEQUE_EXT_COLOR(50)
 #define PASTEQUE_COLOR_WHITE_ON_WHITE PASTEQUE_EXT_COLOR(51)
 
+// Dynamic colors
+#define PASTEQUE_COLOR_WATERMELON_BG_DYN PASTEQUE_EXT_COLOR(64)
+#define PASTEQUE_COLOR_WATERMELON_BG_LIGHT_DYN PASTEQUE_EXT_COLOR(65)
+#define PASTEQUE_COLOR_WATERMELON_DYN PASTEQUE_EXT_COLOR(66)
+#define PASTEQUE_COLOR_WHITE_ON_WATERMELON_DYN PASTEQUE_EXT_COLOR(67)
+
 /**
  * Initializes all the color and color pairs. Must be called in init.
  */
 void initColors();
+
+void colorsUpdateDynamic(unsigned long gameTime);
 
 #endif //PROJET_PASTEQUE_COLORS_H
