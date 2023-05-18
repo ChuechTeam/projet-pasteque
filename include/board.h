@@ -6,6 +6,8 @@
 #define BOARD_WIDTH_MAX 100
 #define BOARD_HEIGHT_MAX 100
 #define MAX_SYMBOLS 6
+#define MAX_TRICKS 50
+#define MAX_TRICK_LENGTH 60
 
 // Helper macros for manipulating the cells array.
 
@@ -39,6 +41,9 @@ typedef struct {
     int height;
     int cellCount;
     int score;
+    int combo;
+    // The list of all tricks in the combo, stuff like "Linear smash", etc.
+    char comboTricks[MAX_TRICKS][MAX_TRICK_LENGTH];
     // A malloc-allocated array of all the cells stored in a contiguous way.
     // The array starts with [width] elements of the first row. Then, the next row.
     // Repeat until we get to [height] rows. This is a row-major array.
@@ -86,6 +91,8 @@ bool boardGravityTick(CrushBoard* board);
 SwapResult boardSwapCells(CrushBoard* board, Point posA, Point posB, bool alwaysRevert);
 
 bool boardAnySwapPossible(CrushBoard* board);
+
+void boardResetCombo(CrushBoard* board);
 
 bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]);
 

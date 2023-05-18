@@ -50,6 +50,7 @@ struct CrushData_S {
     Panel* boardPanel;
     Panel* scorePanel;
     Panel* messagePanel;
+    Panel* comboPanel;
 
     struct PauseMenu {
         UIState state;
@@ -149,6 +150,27 @@ void drawMessagePanel(Panel* panel, PastequeGameState* gameState, void* panelDat
 
     if (data->messageDurationMicros > 0) {
         panelDrawText(panel, 0, 0, data->message, data->messageColor);
+    }
+}
+
+void drawComboPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    CrushData* data = panelData;
+
+    if (data->board->combo == 0) {
+        return;
+    }
+    // In percent, because floating point here would be more a nightmare
+    // than a pleasure if you see what I mean
+    int scoreMult = 100 + data->board->combo * 20;
+    int scoreMultUnit = scoreMult / 100;
+    int scoreMultDecimal = scoreMult % 100;
+
+    char buffer[64];
+    sprintf(buffer, "COMBO X%d (Score x%d.%02d)", data->board->combo, scoreMultUnit, scoreMultDecimal);
+    panelDrawText(panel, 0, 0, buffer, PASTEQUE_COLOR_YELLOW);
+
+    for (int i = 0; i < data->board->combo; ++i) {
+        panelDrawText(panel, 0, i + 2, data->board->comboTricks[i], PASTEQUE_COLOR_YELLOW);
     }
 }
 
@@ -415,6 +437,9 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
     data->messagePanel = gsAddPanel(gameState, 2, data->scorePanel->y + 2, 50, 2,
                                     noneAdornment, &drawMessagePanel, data);
 
+    data->comboPanel = gsAddPanel(gameState, data->boardPanel->x + data->boardPanel->width + 2, 2,
+                                  60, 60, noneAdornment, &drawComboPanel, data);
+
     data->pausePanel = gsAddPanel(gameState, 0, 0, 22, 10, boardAdorn, &drawPauseUI, data);
     data->pausePanel->adornment.colorPairOverrideV = PASTEQUE_COLOR_WHITE_ON_WHITE;
     data->pausePanel->adornment.colorPairOverrideEndY = 2;
@@ -433,8 +458,10 @@ void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long de
             if (markedSomething) {
                 data->playState = CPS_BLINKING;
             } else if (boardAnySwapPossible(data->board)) {
+                boardResetCombo(data->board);
                 data->playState = CPS_WAITING_INPUT;
             } else {
+                boardResetCombo(data->board);
                 gameOver(data);
             }
 
