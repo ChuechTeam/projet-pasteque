@@ -45,7 +45,6 @@ void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int 
         option->x = x;
         option->y = y;
         option->width = width;
-        option->text = text;
         option->interactionIndex = interactionIndex;
         option->style = style;
         option->panel = panel;
@@ -55,11 +54,11 @@ void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int 
     ColorId color = uiGetToggleOptionColor(state, option);
 
     panelDrawLine(panel, option->x, option->y, option->width, ' ', color);
-    int length = (int) strlen(option->text);
+    int length = (int) strlen(text);
     int textX = (option->width - length) / 2;
     if (textX < 0) { textX = 0; }
 
-    panelDrawText(panel, option->x + textX, option->y, option->text, color);
+    panelDrawText(panel, option->x + textX, option->y, text, color);
 }
 
 bool uiHandleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event) {

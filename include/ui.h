@@ -29,7 +29,6 @@ typedef struct {
     int x;
     int y;
     int width;
-    char* text;
     int interactionIndex;
     ToggleOptionStyle style;
     // Set outside drawPanel

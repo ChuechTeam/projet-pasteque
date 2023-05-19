@@ -20,6 +20,7 @@ char* TitleAsciiArtL2 = " | _ \\/_\\ / __|_   _| __/ _ \\| | | | __|";
 char* TitleAsciiArtL3 = " |  _/ _ \\\\__ \\ | | | _| (_) | |_| | _| ";
 char* TitleAsciiArtL4 = " |_|/_/ \\_\\___/ |_| |___\\__\\_\\\\___/|___|";
 char* ArrowRight = "▶";
+char* ArrowLeft = "◀";
 
 struct MainMenuData_S {
     Panel* titlePanel;
@@ -54,6 +55,8 @@ struct MainMenuData_S {
         int width;
     } playSettings;
 
+    // The high scores menu, showing all high scores
+    // filtered by a preset and symbol count
     struct HighScoreSubMenu {
         UIState state;
         ToggleOption presetOption;
@@ -252,10 +255,19 @@ void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData
     char* presetLabel = getPresetLabel(ui->presetFilter);
     char symbolsLabel[32];
     snprintf(symbolsLabel, 32, "%d symboles", ui->symbolsFilter);
+
     uiDrawToggleOption(panel, &ui->state, &ui->symbolsOption, 0, 4, panel->width,
                        symbolsLabel, 0, toggleStyleDefault);
     uiDrawToggleOption(panel, &ui->state, &ui->presetOption, 0, 6, panel->width,
                        presetLabel, 1, toggleStyleDefault);
+
+    // Draw the arrows
+    ColorId symbolColor = uiGetToggleOptionColor(&ui->state, &ui->symbolsOption);
+    ColorId presetColor = uiGetToggleOptionColor(&ui->state, &ui->presetOption);
+    panelDrawText(panel, 0, 4, ArrowLeft, symbolColor); 
+    panelDrawText(panel, panel->width - 1, 4, ArrowRight, symbolColor); 
+    panelDrawText(panel, 0, 6, ArrowLeft, presetColor); 
+    panelDrawText(panel, panel->width - 1, 6, ArrowRight, presetColor); 
 
     int displayedPlayers = ui->numFilteredPlayers;
     if (displayedPlayers > 12) {
@@ -316,6 +328,28 @@ void updateHighscores(MainMenuData* data, bool readFile) {
         }
     }
     ui->numFilteredPlayers = filteredIdx;
+}
+
+// Direction must be either 1 or -1
+void moveHighscoreFilter(MainMenuData* data, int direction)  {
+    HighScoreSubMenu* ui = &data->highScoreUI;
+
+    if (ui->state.selectedIndex == ui->symbolsOption.interactionIndex) {
+        // Loop back to previous options.
+        if (direction == -1 && ui->symbolsFilter == 4) {
+            ui->symbolsFilter = 6;
+        } else {
+            ui->symbolsFilter = 4 + ((ui->symbolsFilter - 4) + direction) % 3;
+        }
+        updateHighscores(data, false);
+    } else if (ui->state.selectedIndex == ui->presetOption.interactionIndex) {
+        if (direction == -1 && ui->presetFilter == 0) {
+            ui->presetFilter = 3; 
+        }else {
+            ui->presetFilter = (ui->presetFilter + direction) % 4;
+        }
+        updateHighscores(data, false);
+    }
 }
 
 // -----------------------------------------------
@@ -473,7 +507,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             switchSubMenu(data, data->mainUIPanel, &mainUI->state);
         }
     } else if (hsUI->state.focused) {
-        if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->presetOption, pEvent)) {
+        if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->symbolsOption, pEvent)) {
             // Nothing to do
             return;
         } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->presetOption, pEvent)) {
@@ -488,6 +522,15 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             {0, 2, ND_VERTICAL}
         };
         uiKeyboardNav(&hsUI->state, pEvent, blocks, 1);
+
+        if (hsUI->state.selectedIndex == hsUI->symbolsOption.interactionIndex 
+        || hsUI->state.selectedIndex == hsUI->presetOption.interactionIndex) {
+            if (pEvent->code == KEY_LEFT || pEvent->code == KEY_Q) {
+                moveHighscoreFilter(data, -1);
+            } else if (pEvent->code == KEY_RIGHT || pEvent->code == KEY_D) {
+                moveHighscoreFilter(data, 1);
+            }
+        }
     }
 }
 
