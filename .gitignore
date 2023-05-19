@@ -191,7 +191,6 @@ build-make/
 .vs/
 CMakeSettings.json
 .vscode/
-
-# KDevelop stuff
+# KDevelop
 .kdev4/
 *.kdev4
