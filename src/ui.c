@@ -3,6 +3,10 @@
 #include <string.h>
 
 bool mouseIntersect(Panel* panel, Event* event, int x, int y, int width, int height) {
+    if (panel == NULL) {
+        RAGE_QUIT(10001, "Panel is NULL.");
+    }
+
     int minX = x + panel->x;
     int maxX = minX + width;
     int minY = y + panel->y;
@@ -20,6 +24,14 @@ bool mouseClick(Event* event) {
 
 void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width,
                         char* text, int interactionIndex, ToggleOptionStyle style) {
+    if (panel == NULL) {
+        RAGE_QUIT(10001, "Panel is NULL.");
+    } else if (state == NULL) {
+        RAGE_QUIT(10002, "UIState is NULL.");
+    } else if (option == NULL) {
+        RAGE_QUIT(10003, "ToggleOption is NULL.");
+    }
+
     if (!option->initialized) {
         option->x = x;
         option->y = y;
@@ -47,8 +59,11 @@ void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int 
 }
 
 bool uiHandleToggleOptionEvent(UIState* state, ToggleOption* option, Event* event) {
-    if (!state->focused) {
+    if (!state->focused || !option->initialized) {
         return false;
+    }
+    if (option->panel == NULL) {
+        RAGE_QUIT(10004, "ToggleOption panel is NULL despite being initialized.");
     }
 
     // Highlight the button when the cursor goes over it.
@@ -95,6 +110,13 @@ void uiDrawTextInput(Panel* panel, UIState* state, TextInput* input, int x, int 
 }
 
 bool uiHandleTextInputEvent(UIState* state, TextInput* input, Event* event) {
+    if (!input->initialized) {
+        return false;
+    }
+    if (input->panel == NULL) {
+        RAGE_QUIT(10004, "TextInput panel is NULL despite being initialized.");
+    }
+
     bool mouseHover = mouseIntersect(input->panel, event, input->x, input->y, input->width, 1);
 
     if (input->isWriting) {
