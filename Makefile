@@ -17,7 +17,7 @@ LIBRARY_PATHS = external/rgr/lib
 LIBRARY_PATHS_ENV = external/rgr/lib
 LIBRARY_PATHS_FLAGS = $(addprefix -L, $(LIBRARY_PATHS))
 # Register all C files here
-SRC_FILES = board.c game.c game_state.c panel.c colors.c scene.c ui.c scenes/main_menu_scene.c scenes/crush_scene.c
+SRC_FILES = board.c game.c game_state.c panel.c colors.c scene.c ui.c highscore.c scenes/main_menu_scene.c scenes/crush_scene.c
 OBJ_FILES = $(SRC_FILES:.c=.o)
 OBJ_FILES_FP = $(addprefix $(OUT)/, $(OBJ_FILES))
 # Full paths to the project includes

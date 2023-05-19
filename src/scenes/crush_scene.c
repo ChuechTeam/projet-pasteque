@@ -3,11 +3,13 @@
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
+#include <stdio.h>
 #include <math.h>
 #include "colors.h"
 #include "board.h"
 #include "ui.h"
 #include "scenes/main_menu_scene.h"
+#include "highscore.h"
 
 #define MILLI_IN_MICROS 1000L
 #define MICROS(millis) (millis*MILLI_IN_MICROS)
@@ -356,6 +358,12 @@ void registerMouseReleased(CrushData* data, int mouseX, int mouseY) {
 
 void gameOver(CrushData* data) {
     data->playState = CPS_GAME_OVER;
+    player newPlayer;
+    strcpy(newPlayer.name, "Jack");
+    newPlayer.score = data->board->score;
+    newPlayer.BoardSizePreset = data->board->sizePreset;
+    newPlayer.symbols = data->board->symbols;
+    new_highscore("highscore.pasteque",&newPlayer);
     displayMessage(data, "GAME OVER ! (Appuyez sur P pour revenir au menu)", PASTEQUE_COLOR_ORANGE, LONG_MAX);
 }
 
