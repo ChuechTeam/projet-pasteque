@@ -37,6 +37,7 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
     }
     board->cellCount = cellCount;
     board->score = 0;
+    board->combo = 0;
     // data->cells has already been initialized since we've allocated enough space using malloc.
 
     // Fill with random values
@@ -218,7 +219,7 @@ bool boardGravityTick(CrushBoard* board) {
     return anyCellMoved;
 }
 
-int points(int length) {
+int basePoints(int length) {
     switch (length) {
         case 3:
             return 300;
@@ -238,6 +239,130 @@ int points(int length) {
             return 10000;
         default:
             return 20000 * length;
+    }
+}
+
+int points(int length, int combo) {
+    int base = basePoints(length);
+    // Current combo formula: +20% points per combo
+    float mult = 1.0f + (combo * 0.2f);
+    return (int) (base * mult); // Round down
+}
+
+void addLineScore(CrushBoard* board, int length) {
+    static const char* lengthPrefixes[] = {
+            "%d-Sized",
+            "%d-Scaled",
+            "%d Long",
+            "Huge %d",
+            "Gigantic %d"
+    };
+    static const int lengthPrefixesNum = 5;
+    static const char* adjectives[] = {
+            "Linear",
+            "Sequential",
+            "Straight",
+            "Sequential",
+            "Aligned",
+            "Phenomenal",
+            "Top-Notch",
+            "Chaotic",
+            "360°",
+            "Cataclysmic",
+            "Devastating",
+            "Ground-breaking",
+            "Astonishing",
+            "Marvelous",
+            "Mathematically Correct",
+            "WTF?!"
+    };
+    static const int adjectivesNum = 15;
+    static const char* nouns1[] = {
+            "Line",
+            "Sequence",
+            "Alignment",
+            "Flip",
+            "Flick",
+            "Swap",
+            "No Ruler",
+            "WTF?!"
+    };
+    static const int nouns1Num = 8;
+    static const char* nouns2[] = {
+            "Removal",
+            "Clean-up",
+            "Smash",
+            "Erasure",
+            "Destruction",
+            "Carnage",
+            "Obliteration",
+            "Elimination",
+            "Annihilation"
+    };
+    static const int nouns2Num = 9;
+
+    int pts = points(length, board->combo);
+    board->score += pts;
+    board->combo++;
+
+    // Now, let's find a FUNNY trick name to amuse our players!
+    int trickIndex = board->combo - 1;
+    if (trickIndex >= MAX_TRICKS) {
+        // Override other tricks on the start of the array.
+        // And make sure the string is empty.
+        trickIndex = trickIndex % MAX_TRICKS;
+        memset(board->comboTricks[trickIndex], 0, sizeof(char)*MAX_TRICK_LENGTH);
+    }
+    int extraCells = length - 3;
+    // Chances are in 1/1000 format.
+    int lengthPrefixChance = 150 + extraCells * 600;
+    int adjectiveChance = 400 + extraCells * 350;
+    int twoNounsChance = 200 + extraCells * 350;
+
+    // Setup the start indices so the more interesting plays get more interesting
+    // strings.
+    int lpIdx = extraCells >= 3 ? 3 : 0 + extraCells;
+    int adjIdx = extraCells >= 3 ? 6 : 2 * extraCells;
+    int n1Idx = 0;
+    int n2Idx = extraCells >= 2 ? 2 : extraCells;
+
+    char* trickStr = board->comboTricks[trickIndex];
+
+    // Remark: the string should have enough characters for the maximum combination.
+    // Currently, it's 64 characters which is more than enough.
+    // Step one: the length prefix
+    if ((rand() % 1000) < lengthPrefixChance) {
+        const char* chosen = lengthPrefixes[lpIdx + (rand() % (lengthPrefixesNum - lpIdx))];
+        char formatted[32];
+        snprintf(formatted, 32, chosen, length);
+        strcat(trickStr, formatted);
+        strcat(trickStr, " ");
+    }
+
+    // Step two: the adjective
+    if ((rand() % 1000) < adjectiveChance) {
+        const char* chosen = adjectives[adjIdx + (rand() % (adjectivesNum - adjIdx))];
+        strcat(trickStr, chosen);
+        strcat(trickStr, " ");
+    }
+
+    // Step three: the nouns
+    bool bothNouns = (rand() % 1000) < twoNounsChance;
+    bool writeNoun1 = bothNouns || ((rand() % 2) == 0);
+    bool writeNoun2 = bothNouns || !writeNoun1;
+    if (writeNoun1) {
+        const char* chosen = nouns1[n1Idx + (rand() % (nouns1Num - n1Idx))];
+        strcat(trickStr, chosen);
+        strcat(trickStr, " ");
+    }
+    if (writeNoun2) {
+        const char* chosen = nouns2[n2Idx + (rand() % (nouns2Num - n2Idx))];
+        strcat(trickStr, chosen);
+    }
+    // Remove the last space, if any
+    size_t trickLen = strlen(trickStr);
+    if (trickStr[trickLen - 1] == ' ') {
+        trickStr[trickLen - 1] = '\0';
     }
 }
 
@@ -327,7 +452,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
                 for (int xe = board->width; xe >= endX; xe--) {
                     CELL(board, xe - 1, y).markedForDestruction = true;
                 }
-                board->score += points(length);
+                addLineScore(board, length);
             }
         }
 
@@ -342,7 +467,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
                     for (int k = 0; k < length; k++) {
                         CELL(board, x - k, y).markedForDestruction = true;
                     }
-                    board->score += points(length);
+                    addLineScore(board, length);
                 }
                 length = 1;
             }
@@ -388,7 +513,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
                 for (int ye = board->height; ye >= endY; ye--) {
                     CELL(board, x, ye - 1).markedForDestruction = true;
                 }
-                board->score += points(length);
+                addLineScore(board, length);
             }
 
             length = 1;
@@ -402,7 +527,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
                     for (int k = 0; k < length; k++) {
                         CELL(board, x, y - k).markedForDestruction = true;
                     }
-                    board->score += points(length);
+                    addLineScore(board, length);
                 }
                 length = 1;
             }
@@ -549,6 +674,10 @@ SwapResult boardSwapCells(CrushBoard* board, Point posA, Point posB, bool always
 }
 
 bool boardAnySwapPossible(CrushBoard* board) {
+    if (board == NULL) {
+        RAGE_QUIT(2002, "Crush board is NULL.");
+    }
+
     // Test all left to right swaps, and top to bottom swaps.
     // Regarding complexity, this function can be really costly: O(WxH)!
     // No need to worry though, since the worst case (no swaps at all) happens
@@ -596,6 +725,10 @@ void boardGetPresetDimensions(BoardSizePreset preset, int* outWidth, int* outHei
 }
 
 bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]) {
+    if (board == NULL) {
+        RAGE_QUIT(2002, "Crush board is NULL.");
+    }
+
     FILE* file = fopen(path, "w");
     if (file == NULL) {
         snprintf(errorMessage, 256, "Échec de l'ouverture du fichier, code d'erreur %d :\n%s\n(Chemin : %s)",
@@ -669,7 +802,7 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
             // Parsed.
         } else if (symbols == 0 && sscanf(line, "symbols=%hhd", &symbols)) {
             // Parsed
-        } else if (preset == -1 && sscanf(line, "preset=%d", (int*)&preset)) {
+        } else if (preset == -1 && sscanf(line, "preset=%d", (int*) &preset)) {
             // Parsed
         } else if (strcmp(line, "cells:\n") == 0) {
             parseCells = true;
@@ -782,4 +915,10 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
 
     fclose(file);
     return !error;
+}
+
+void boardResetCombo(CrushBoard* board) {
+    board->combo = 0;
+    // Fill the comboTricks array with zero values.
+    memset(board->comboTricks, 0, sizeof(board->comboTricks));
 }
