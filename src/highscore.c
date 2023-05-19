@@ -81,10 +81,12 @@ void new_highscore(const char* filename, const player* newPlayer) {
 }
 
 
-void parseFile(const char* filename, player* players, int maxPlayers) {
+bool parseFile(const char* filename, player* players, int maxPlayers, int* outNumPlayers) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         printf("Failed to open the file.\n");
+        *outNumPlayers = 0;
+        return false;
     }
 
     int count = 0;
@@ -112,5 +114,7 @@ void parseFile(const char* filename, player* players, int maxPlayers) {
 
     fclose(file);
     ajustscores(filename,players,count<100?count:100);
-    free(players);
+
+    *outNumPlayers = count;
+    return true;
 }

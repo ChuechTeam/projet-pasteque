@@ -1,11 +1,13 @@
 #include <malloc.h>
 #include <stdlib.h>
+#include <string.h>
 #include "scenes/main_menu_scene.h"
 #include "colors.h"
 #include "scenes/crush_scene.h"
 #include "stdbool.h"
 #include "ui.h"
 #include "board.h"
+#include "highscore.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -51,10 +53,30 @@ struct MainMenuData_S {
         int height;
         int width;
     } playSettings;
+
+    struct HighScoreSubMenu {
+        UIState state;
+        ToggleOption presetOption;
+        ToggleOption symbolsOption;
+        ToggleOption backButton;
+
+        BoardSizePreset presetFilter;
+        char symbolsFilter;
+
+        player allPlayers[MAX_PLAYERS];
+        int numAllPlayers;
+        // This is an array of pointers pointing to
+        // elements of the allPlayers array.
+        // Saves up some memory.
+        player* filteredPlayers[MAX_PLAYERS];
+        int numFilteredPlayers;
+    } highScoreUI;
+    Panel* highScorePanel;
 };
 
 typedef struct MainSubMenu MainSubMenu;
 typedef struct PlaySubMenu PlaySubMenu;
+typedef struct HighScoreSubMenu HighScoreSubMenu;
 typedef struct PlaySettings PlaySettings;
 
 MainMenuData* makeMainMenuData() {
@@ -208,6 +230,94 @@ void registerHeightInput(MainMenuData* data, TextInput* input) {
     }
 }
 
+// -------------------------------------------------------
+// HIGH SCORES UI FUNCTIONS
+// Contains: High scores (duh), symbol and preset filters
+// --------------------------------------------------------
+
+// Declare some functions beforehand (looks more clean... I think)
+char* getPresetLabel(BoardSizePreset preset);
+
+void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    MainMenuData* data = panelData;
+    HighScoreSubMenu* ui = &data->highScoreUI;
+
+    // Draw the background
+    for (int y = 0; y < 3; ++y) {
+        panelDrawLine(panel, 0, y, panel->width, ' ', PASTEQUE_COLOR_BLACK);
+    }
+
+    panelDrawTextCentered(panel, -1, 1, "Meilleurs scores", PASTEQUE_COLOR_BLACK);
+
+    char* presetLabel = getPresetLabel(ui->presetFilter);
+    char symbolsLabel[32];
+    snprintf(symbolsLabel, 32, "%d symboles", ui->symbolsFilter);
+    uiDrawToggleOption(panel, &ui->state, &ui->symbolsOption, 0, 4, panel->width,
+                       symbolsLabel, 0, toggleStyleDefault);
+    uiDrawToggleOption(panel, &ui->state, &ui->presetOption, 0, 6, panel->width,
+                       presetLabel, 1, toggleStyleDefault);
+
+    int displayedPlayers = ui->numFilteredPlayers;
+    if (displayedPlayers > 12) {
+        displayedPlayers = 12;
+    }
+
+    for (int i = 0; i < displayedPlayers; i++) {
+        player* pl = ui->filteredPlayers[i];
+
+        panelDrawText(panel, 0, 8+i, pl->name, PASTEQUE_COLOR_WHITE);
+        char scoreStr[16];
+        snprintf(scoreStr, 16, "%d", pl->score);
+        panelDrawText(panel, panel->width - strlen(scoreStr), 8+i, scoreStr, PASTEQUE_COLOR_WHITE);
+    }
+
+    uiDrawToggleOption(panel, &ui->state, &ui->backButton, 1, 21, panel->width - 2,
+                       "Retour", 2, toggleStyleButton);
+}
+
+char* getPresetLabel(BoardSizePreset preset) {
+    switch (preset) {
+        case BSP_SMALL:
+            return "Petite grile";
+        case BSP_MEDIUM:
+            return "Moyenne grille";
+        case BSP_LARGE:
+            return "Grande grille";
+        case BSP_CUSTOM:
+            return "Grille perso.";
+        default:
+            return "???";
+    }
+}
+
+// Update all the highscores; and the filtered highscores.
+void updateHighscores(MainMenuData* data, bool readFile) {
+    HighScoreSubMenu* ui = &data->highScoreUI;
+
+    // Read the high scores from the saved file.
+    if (readFile) {
+        // Reset anything beforehand
+        memset(ui->allPlayers, 0, sizeof(player)*MAX_PLAYERS);
+        ui->numAllPlayers = 0;
+
+        parseFile("highscore.pasteque", ui->allPlayers, MAX_PLAYERS, &ui->numAllPlayers);
+    }
+
+    memset(ui->filteredPlayers, 0, sizeof(player*)*MAX_PLAYERS);
+    ui->numFilteredPlayers = 0;
+
+    int filteredIdx = 0;
+    for (int i = 0; i < ui->numAllPlayers; i++) {
+        player* pl = &ui->allPlayers[i];
+        if (pl->BoardSizePreset == ui->presetFilter &&
+            pl->symbols == ui->symbolsFilter) {
+            ui->filteredPlayers[filteredIdx] = pl;
+            filteredIdx++;
+        }
+    }
+    ui->numFilteredPlayers = filteredIdx;
+}
+
 // -----------------------------------------------
 // OTHER UI FUNCTIONS
 // -----------------------------------------------
@@ -216,6 +326,8 @@ void switchSubMenu(MainMenuData* data, Panel* panel, UIState* state) {
     // Switch off all other submenus (except the mainUI panel)
     data->playUI.state.focused = false;
     data->playPanel->visible = false;
+    data->highScoreUI.state.focused = false;
+    data->highScorePanel->visible = false;
     data->mainUI.state.focused = false;
 
     // Switch on the specified submenu.
@@ -256,6 +368,16 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
     data->playUI.symbolOptions[0].toggled = true;
     data->playUI.presetOptions[1].toggled = true;
 
+    // HIGH SCORES SUBMENU
+    // --------------------------------------------------------
+    data->highScorePanel = gsAddPanel(gameState, TITLE_WIDTH + TITLE_MARGIN + 5, 2, 32, 23,
+                                      sideAdorn, &drawHighScoreUI, data);
+
+    data->highScorePanel->visible = false;
+    data->highScoreUI.state.focused = false;
+    data->highScoreUI.presetFilter = BSP_MEDIUM;
+    data->highScoreUI.symbolsFilter = 4;
+
     // PLAY SETTINGS CONFIG
     // --------------------------------------------------------
     data->playSettings.sizePreset = BSP_MEDIUM;
@@ -269,6 +391,7 @@ void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned l
 void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEvent) {
     MainSubMenu* mainUI = &data->mainUI;
     PlaySubMenu* playUI = &data->playUI;
+    HighScoreSubMenu* hsUI = &data->highScoreUI;
 
     // We're in the main UI buttons
     if (mainUI->state.focused) {
@@ -292,7 +415,8 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             }
         }
         else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {
-            // TODO: High scores maybe??
+            updateHighscores(data, true);
+            switchSubMenu(data, data->highScorePanel, &data->highScoreUI.state);
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->quitButton, pEvent)) {
             gsQuitGame(gameState);
         }
@@ -348,6 +472,22 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         if (uiHandleToggleOptionEvent(&playUI->state, &playUI->backButton, pEvent)) {
             switchSubMenu(data, data->mainUIPanel, &mainUI->state);
         }
+    } else if (hsUI->state.focused) {
+        if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->presetOption, pEvent)) {
+            // Nothing to do
+            return;
+        } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->presetOption, pEvent)) {
+            // Nothing!
+            return;
+        } if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->backButton, pEvent)) {
+            switchSubMenu(data, data->mainUIPanel, &mainUI->state);
+            return;
+        }
+
+        UINavBlock blocks[] = {
+            {0, 2, ND_VERTICAL}
+        };
+        uiKeyboardNav(&hsUI->state, pEvent, blocks, 1);
     }
 }
 

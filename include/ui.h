@@ -87,6 +87,8 @@ static TextInputStyle textInputStyleDefault = {PASTEQUE_COLOR_BLACK,
                                                PASTEQUE_COLOR_WATERMELON_BG_DYN,
                                                PASTEQUE_COLOR_WATERMELON_BG_LIGHT_DYN};
 
+ColorId uiGetToggleOptionColor(const UIState* state, const ToggleOption* option);
+
 void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width, char* text,
                         int interactionIndex, ToggleOptionStyle style);
 // True when toggled

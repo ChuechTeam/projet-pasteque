@@ -22,6 +22,15 @@ bool mouseClick(Event* event) {
     return event->code == KEY_MOUSE && (event->mouseEvent.bstate & (BUTTON1_RELEASED | BUTTON3_RELEASED)) != 0;
 }
 
+ColorId uiGetToggleOptionColor(const UIState* state, const ToggleOption* option) {
+    if (state->focused && state->selectedIndex == option->interactionIndex) {
+        return option->toggled ? option->style.toggledActiveColorId : option->style.activeColorId;
+    } else {
+        return option->toggled ? option->style.toggledInactiveColorId : option->style.inactiveColorId;
+    }
+}
+
+
 void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int x, int y, int width,
                         char* text, int interactionIndex, ToggleOptionStyle style) {
     if (panel == NULL) {
@@ -43,12 +52,7 @@ void uiDrawToggleOption(Panel* panel, UIState* state, ToggleOption* option, int 
         option->initialized = true;
     }
 
-    ColorId color;
-    if (state->focused && state->selectedIndex == option->interactionIndex) {
-        color = option->toggled ? option->style.toggledActiveColorId : option->style.activeColorId;
-    } else {
-        color = option->toggled ? option->style.toggledInactiveColorId : option->style.inactiveColorId;
-    }
+    ColorId color = uiGetToggleOptionColor(state, option);
 
     panelDrawLine(panel, option->x, option->y, option->width, ' ', color);
     int length = (int) strlen(option->text);

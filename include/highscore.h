@@ -3,6 +3,7 @@
  * -------------
  * Contains everything needed to store the highscore so you can brag about it
  */
+#include <stdbool.h>
 
 #define MAX_PLAYERS 101
 #define MAX_NAME_LENGTH 100 
@@ -25,6 +26,7 @@ void ajustscores(const char* filename, player* players, int count);
 int removeDuplicatePlayers(player* players, int playerCount);
 
  //main function to read the file, rank the players and rewrite the file
-void parseFile(const char* filename, player* players, int maxPlayers);
+ // Returns the number of players in the array
+bool parseFile(const char* filename, player* players, int maxPlayers, int* outNumPlayers);
     
 void player_display(player *players, int top);
