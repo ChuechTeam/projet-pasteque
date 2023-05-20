@@ -25,6 +25,7 @@ char* ArrowLeft = "◀";
 struct MainMenuData_S {
     Panel* titlePanel;
     Panel* subtitlePanel;
+    Panel* adPanel; // #OPÉ_SPÉ
 
     // The main buttons (Play, High Scores, Quit)
     struct MainSubMenu {
@@ -92,7 +93,7 @@ MainMenuData* makeMainMenuData() {
 
 // -------------------------------------------------------
 // MAIN UI FUNCTIONS
-// Contains: Title, Subtitle, Play, High Scores, Quit
+// Contains: Title, Subtitle, Ad, Play, High Scores, Quit
 // --------------------------------------------------------
 
 void drawTitlePanel(Panel* panel, PastequeGameState* gameState, void* osef) {
@@ -123,6 +124,12 @@ void drawMainUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
     if (ui->state.focused) {
         panelDrawText(panel, 0, ui->state.selectedIndex * 2, ArrowRight, PASTEQUE_COLOR_WATERMELON_DYN);
     }
+}
+
+void drawAdPanel(Panel* panel, PastequeGameState* gameState, void* osef) {
+    panelDrawText(panel, 0, 0, "Participez au Tournoi\ninternational de Pasteque\net tentez de gagner\nle gros lot !\n"
+                               "Plus d'informations\nprochainement.",
+                  PASTEQUE_COLOR_YELLOW);
 }
 
 // -------------------------------------------------------
@@ -163,7 +170,8 @@ void drawPlayUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
     panelDrawLine(panel, 12, 17, 1, 'X', PASTEQUE_COLOR_WHITE);
     uiDrawTextInput(panel, &ui->state, &ui->heightInput, 16, 17, 4, 3, 8, textInputStyleDefault);
 
-    uiDrawToggleOption(panel, &ui->state, &ui->playButton, 1, 19, panel->width - 2, "Démarrer !!", 9, toggleStyleButton);
+    uiDrawToggleOption(panel, &ui->state, &ui->playButton, 1, 19, panel->width - 2, "Démarrer !!", 9,
+                       toggleStyleButton);
     uiDrawToggleOption(panel, &ui->state, &ui->backButton, 1, 21, panel->width - 2, "Annuler", 10,
                        toggleStyleButton);
 }
@@ -264,10 +272,10 @@ void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData
     // Draw the arrows
     ColorId symbolColor = uiGetToggleOptionColor(&ui->state, &ui->symbolsOption);
     ColorId presetColor = uiGetToggleOptionColor(&ui->state, &ui->presetOption);
-    panelDrawText(panel, 0, 4, ArrowLeft, symbolColor); 
-    panelDrawText(panel, panel->width - 1, 4, ArrowRight, symbolColor); 
-    panelDrawText(panel, 0, 6, ArrowLeft, presetColor); 
-    panelDrawText(panel, panel->width - 1, 6, ArrowRight, presetColor); 
+    panelDrawText(panel, 0, 4, ArrowLeft, symbolColor);
+    panelDrawText(panel, panel->width - 1, 4, ArrowRight, symbolColor);
+    panelDrawText(panel, 0, 6, ArrowLeft, presetColor);
+    panelDrawText(panel, panel->width - 1, 6, ArrowRight, presetColor);
 
     int displayedPlayers = ui->numFilteredPlayers;
     if (displayedPlayers > 12) {
@@ -277,10 +285,10 @@ void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData
     for (int i = 0; i < displayedPlayers; i++) {
         player* pl = ui->filteredPlayers[i];
 
-        panelDrawText(panel, 0, 8+i, pl->name, PASTEQUE_COLOR_WHITE);
+        panelDrawText(panel, 0, 8 + i, pl->name, PASTEQUE_COLOR_WHITE);
         char scoreStr[16];
         snprintf(scoreStr, 16, "%d", pl->score);
-        panelDrawText(panel, panel->width - strlen(scoreStr), 8+i, scoreStr, PASTEQUE_COLOR_WHITE);
+        panelDrawText(panel, panel->width - strlen(scoreStr), 8 + i, scoreStr, PASTEQUE_COLOR_WHITE);
     }
 
     uiDrawToggleOption(panel, &ui->state, &ui->backButton, 1, 21, panel->width - 2,
@@ -309,13 +317,13 @@ void updateHighscores(MainMenuData* data, bool readFile) {
     // Read the high scores from the saved file.
     if (readFile) {
         // Reset anything beforehand
-        memset(ui->allPlayers, 0, sizeof(player)*MAX_PLAYERS);
+        memset(ui->allPlayers, 0, sizeof(player) * MAX_PLAYERS);
         ui->numAllPlayers = 0;
 
         parseFile("highscore.pasteque", ui->allPlayers, MAX_PLAYERS, &ui->numAllPlayers);
     }
 
-    memset(ui->filteredPlayers, 0, sizeof(player*)*MAX_PLAYERS);
+    memset(ui->filteredPlayers, 0, sizeof(player*) * MAX_PLAYERS);
     ui->numFilteredPlayers = 0;
 
     int filteredIdx = 0;
@@ -331,7 +339,7 @@ void updateHighscores(MainMenuData* data, bool readFile) {
 }
 
 // Direction must be either 1 or -1
-void moveHighscoreFilter(MainMenuData* data, int direction)  {
+void moveHighscoreFilter(MainMenuData* data, int direction) {
     HighScoreSubMenu* ui = &data->highScoreUI;
 
     if (ui->state.selectedIndex == ui->symbolsOption.interactionIndex) {
@@ -344,8 +352,8 @@ void moveHighscoreFilter(MainMenuData* data, int direction)  {
         updateHighscores(data, false);
     } else if (ui->state.selectedIndex == ui->presetOption.interactionIndex) {
         if (direction == -1 && ui->presetFilter == 0) {
-            ui->presetFilter = 3; 
-        }else {
+            ui->presetFilter = 3;
+        } else {
             ui->presetFilter = (ui->presetFilter + direction) % 4;
         }
         updateHighscores(data, false);
@@ -385,8 +393,11 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
                                   &drawTitlePanel, NULL);
     data->subtitlePanel = gsAddPanel(gameState, 2, 11, 30, 2, noneAdornment, &drawSubtitlePanel, NULL);
 
-    data->mainUIPanel = gsAddPanel(gameState, 4, 14, 26, 10, noneAdornment, &drawMainUI, data);
+    data->mainUIPanel = gsAddPanel(gameState, 4, 14, 26, 8, noneAdornment, &drawMainUI, data);
     data->mainUI.state.focused = true;
+
+    data->adPanel = gsAddPanel(gameState, 4, 23, 26, 6, makeAdornment(PAS_SINGLE_BORDER, PASTEQUE_COLOR_YELLOW),
+                               &drawAdPanel, NULL);
 
     // PLAY SUBMENU (Symbols, dimensions)
     // --------------------------------------------------------
@@ -447,8 +458,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
                 debug("Fail !\n");
                 debug("Msg: [%s]\n", errMsg);
             }
-        }
-        else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {
+        } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {
             updateHighscores(data, true);
             switchSubMenu(data, data->highScorePanel, &data->highScoreUI.state);
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->quitButton, pEvent)) {
@@ -513,18 +523,19 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->presetOption, pEvent)) {
             // Nothing!
             return;
-        } if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->backButton, pEvent)) {
+        }
+        if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->backButton, pEvent)) {
             switchSubMenu(data, data->mainUIPanel, &mainUI->state);
             return;
         }
 
         UINavBlock blocks[] = {
-            {0, 2, ND_VERTICAL}
+                {0, 2, ND_VERTICAL}
         };
         uiKeyboardNav(&hsUI->state, pEvent, blocks, 1);
 
-        if (hsUI->state.selectedIndex == hsUI->symbolsOption.interactionIndex 
-        || hsUI->state.selectedIndex == hsUI->presetOption.interactionIndex) {
+        if (hsUI->state.selectedIndex == hsUI->symbolsOption.interactionIndex
+            || hsUI->state.selectedIndex == hsUI->presetOption.interactionIndex) {
             if (pEvent->code == KEY_LEFT || pEvent->code == KEY_Q) {
                 moveHighscoreFilter(data, -1);
             } else if (pEvent->code == KEY_RIGHT || pEvent->code == KEY_D) {

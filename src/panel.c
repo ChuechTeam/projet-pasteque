@@ -210,20 +210,43 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId) {
         return;
     }
 
-    int localX = pPanel->x + x;
-    int localY = pPanel->y + y;
-    int length = (int) strlen(pText);
-    if (localX < 0) { // Negative X, we need to correct some issues related to string rendering.
-        if (-localX >= length) {
-            // In that case, no text will be rendered at all!
-            return;
-        }
-        pText -= localX; // Skip x characters. Might cause issues with UTF-8.
-        length += localX; // Remove characters that we skipped on the length.
-        localX = 0;
-    }
+    // We do seemingly complicated stuff to get multi-line text working.
+    // Actually, it's just a matter of splitting the string into lines.
+    bool stringEnd = false;
+    int lineBegin = 0;
+    for (int i = 0; !stringEnd; ++i) {
+        stringEnd = pText[i] == '\0';
+        if (stringEnd || pText[i] == '\n') {
+            // End of line!
+            int lineLen = i - lineBegin;
+            if (lineLen >= 256) {
+                lineLen = 255; // Limit characters to 255 (RGR limitation)
+            }
 
-    drawText(pPanel->pScreen, localX, localY, pText, clrId);
+            // Copy to a buffer so we get only the line printed out (not the entire text).
+            char lineBoundedStr[256];
+            memcpy(lineBoundedStr, pText + lineBegin, sizeof(char)*lineLen);
+            lineBoundedStr[lineLen] = '\0'; // Add the null character
+
+            // Draw to the screen, and clamp the line before.
+            char* line = lineBoundedStr;
+            int localX = pPanel->x + x;
+            int localY = pPanel->y + y;
+            if (localX < 0) { // Negative X, we need to correct some issues related to string rendering.
+                if (-localX >= lineLen) {
+                    // In that case, no text will be rendered at all!
+                    return;
+                }
+                line -= localX; // Skip x characters. Might cause issues with UTF-8.
+                localX = 0;
+            }
+            drawText(pPanel->pScreen, localX, localY, line, clrId);
+
+            // Setup the next line (make sure to skip the \n)
+            lineBegin = i + 1;
+            y++;
+        }
+    }
 }
 
 void panelTranslate(Panel* pPanel, int x, int y) {
@@ -269,7 +292,7 @@ void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId) 
         RAGE_QUIT(212, "Cannot draw a NULL string.");
     }
 
-    int length = (int)strlen(pText);
+    int length = (int) strlen(pText);
     if (x == -1) {
         if (length <= pPanel->width) {
             x = (pPanel->width - length) / 2;
