@@ -1,8 +1,10 @@
 #include "highscore.h"
+#include "libGameRGR2.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+//You know how leaderboards work right ?
 void scores_sort(player *players, int count){
     int etape,decal;
     player temp;
@@ -17,74 +19,71 @@ void scores_sort(player *players, int count){
     }
 }
 
-void ajustscores(const char* filename, player* players, int count){
+// Rewrites the file with only the best scores for each category (see LEADERBOARD_MAX)
+// Can also change the size of the array by removing some of its elements.
+// Expects the players array to be sorted.
+void ajustscores(const char* filename, player* players, int* count){
     FILE* file = fopen(filename, "w");  // Open the file in write mode
     if (file == NULL) {
-        printf("Failed to open the file.\n");
-        return;
+        // Then the file is likely readable, but write-protected.
+        // Maybe that there should be something shown on screen for this,
+        // but it's not so important so let's not complicate it.
     }
-    for (int i = 0; i < count; i++){
-        fprintf(file, "Score : %d by %s using the BoardSizePreset %d playing with %hhd symbols\n", players[i].score, players[i].name,players[i].BoardSizePreset,players[i].symbols);
-    }
-    
 
-    fclose(file);
-}
+    // To avoid a very costly operation with three for loops, instead have
+    // an array that stores each unique leaderboard configuration (symbol & size)
+    // using a unique identifier of 4 bits:
+    //                      ss|pp
+    // symbols 4+(0 to 2) --^^|^^-- preset (0 to 3)
+    int leaderboardsCount[16] = {0}; // The number of players in each leaderboard
 
-int removeDuplicatePlayers(player* players, int playerCount) {
-    int i, j;
-    for (i = 0; i < playerCount - 1; i++) {
-        if (strcmp(players[i].name, players[i + 1].name) == 0 && players[i].BoardSizePreset == players[i + 1].BoardSizePreset && players[i].symbols == players[i + 1].symbols) {
-            if (players[i].score <= players[i + 1].score) {
-                // Shift elements to the left to remove player i
-                for (j = i; j < playerCount - 1; j++) {
-                    strcpy(players[j].name, players[j + 1].name);
-                    players[j].score = players[j + 1].score;
-                    players[j].BoardSizePreset = players[j + 1].BoardSizePreset;
-                    players[j].symbols = players[j + 1].symbols;
-                }
-                (playerCount)--;
-                i--;  // Revisit the current index after shifting elements
-            } else {
-                // Shift elements to the left to remove the player i+1
-                for (j = i + 1; j < playerCount - 1; j++) {
-                    strcpy(players[j].name, players[j + 1].name);
-                    players[j].score = players[j + 1].score;
-                    players[j].BoardSizePreset = players[j + 1].BoardSizePreset;
-                    players[j].symbols = players[j + 1].symbols;
-                }
-                (playerCount)--;
+    for (int i = 0; i < *count; ++i) {
+        // Move the symbols count two bits on the left: [ss]|pp
+        // Add the preset bits on the right: ss|[pp]
+        int id = (players[i].symbols - 4) << 2 | players[i].preset;
+        if (leaderboardsCount[id] != LEADERBOARD_MAX) {
+            if (file) {
+                fprintf(file, "Score : %d by %s using the BoardSizePreset %d playing with %hhd symbols\n",
+                        players[i].score, players[i].name, players[i].preset, players[i].symbols);
             }
+
+            leaderboardsCount[id]++;
+        } else {
+            // Remove the player from the array: shift all elements next to it.
+            // Operation cost: O(n) but that's rare anyway right? Unless someone
+            // decides to violently add 2000 times the same line to the file...
+            for (int j = i; j < *count - 1; ++j) {
+                players[i] = players[i + 1];
+            }
+            (*count)--;
+            i--; // Adjust the index since we have moved forward.
         }
     }
-    return playerCount;
-}
 
-
-void player_display(player *players, int top){
-    printf("Top %d players:\n",top);
-    for (int i = 0; i < top; i++) {
-        printf("Name: %s, Score: %d bsp : %d, symbols : %c\n", players[i].name, players[i].score,players[i].BoardSizePreset,players[i].symbols);
+    if (file) {
+        fclose(file);
     }
-    
 }
 
-void new_highscore(const char* filename, const player* newPlayer) {
+bool hsNew(const char* filename, const player* newPlayer) {
     FILE* file = fopen(filename, "a");  // Open the file in append mode
     if (file == NULL) {
-        printf("Failed to open the file.\n");
+        return false;
     }
 
-    fprintf(file, "\nScore : %d by %s using the BoardSizePreset %d playing with %hhd symbols\n", newPlayer->score, newPlayer->name,newPlayer->BoardSizePreset,newPlayer->symbols);
+    bool success;
+    success = fprintf(file, "\nScore : %d by %s using the BoardSizePreset %d playing with %hhd symbols\n",
+                      newPlayer->score, newPlayer->name, newPlayer->preset, newPlayer->symbols);
 
     fclose(file);
+
+    return success;
 }
 
 
-bool parseFile(const char* filename, player* players, int maxPlayers, int* outNumPlayers) {
+bool hsParse(const char* filename, player* players, int* outNumPlayers) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Failed to open the file.\n");
         *outNumPlayers = 0;
         return false;
     }
@@ -92,28 +91,27 @@ bool parseFile(const char* filename, player* players, int maxPlayers, int* outNu
     int count = 0;
     char line[256];  // Assuming the line won't exceed the buffer size
 
-    while (fgets(line, sizeof(line), file) != NULL && count < maxPlayers) {
+    while (fgets(line, sizeof(line), file) != NULL && count < MAX_PLAYERS) {
         // Parse the name and score from the line
         char name[MAX_NAME_LENGTH];
         int score;
-        int BoardSizePreset;
+        int preset;
         char symbols;
-        if (sscanf(line, "Score : %d by %s using the BoardSizePreset %d playing with %hhd symbols", &score, name, &BoardSizePreset, &symbols) != 4) {
+        if (sscanf(line, "Score : %d by %s using the BoardSizePreset %d playing with %hhd symbols", &score, name, &preset, &symbols) != 4) {
             continue;  // Skip this line and continue to the next one
         }
 
         // Stores the informations in the players array
         strncpy(players[count].name, name, MAX_NAME_LENGTH);
         players[count].score = score;
-        players[count].BoardSizePreset = BoardSizePreset;
+        players[count].preset = preset;
         players[count].symbols = symbols;
         count++;
     }
-    scores_sort(players,count); //sorts the players accordingly to their score
-    count = removeDuplicatePlayers(players, count); //remove the worst score if the player already had one 
+    scores_sort(players, count); //sorts the players accordingly to their score
 
     fclose(file);
-    ajustscores(filename,players,count<100?count:100);
+    ajustscores(filename,players, &count);
 
     *outNumPlayers = count;
     return true;

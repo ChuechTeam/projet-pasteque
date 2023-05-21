@@ -359,11 +359,18 @@ void addLineScore(CrushBoard* board, int length) {
         const char* chosen = nouns2[n2Idx + (rand() % (nouns2Num - n2Idx))];
         strcat(trickStr, chosen);
     }
+
     // Remove the last space, if any
     size_t trickLen = strlen(trickStr);
     if (trickStr[trickLen - 1] == ' ') {
         trickStr[trickLen - 1] = '\0';
     }
+
+    // Step four (final step): add the amount of points of the line
+    char ptsStr[10];
+    snprintf(ptsStr, 10, " (+%d)", pts);
+
+    strcat(trickStr, ptsStr);
 }
 
 // Returns true if the cell at (x, y) has the same symbol on the next cell.
@@ -884,11 +891,6 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
         if (!error) {
             y++;
         }
-    }
-
-    if (!error && y != height) {
-        error = true;
-        snprintf(errorMessage, 256, "Lignes manquantes dans la grille (y=%d)", y);
     }
 
     // Conclude!

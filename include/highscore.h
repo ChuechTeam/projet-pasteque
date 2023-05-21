@@ -5,28 +5,28 @@
  */
 #include <stdbool.h>
 
-#define MAX_PLAYERS 101
-#define MAX_NAME_LENGTH 100 
+// The maximum amount of players in a specific high score leaderboard
+// (Example: 4 symbols, medium size)
+#define LEADERBOARD_MAX 12
+// ALL COMBINATIONS OF:
+// - 4, 5, 6 symbols
+// - small, medium, large, custom board
+// = 4*3=12
+#define MAX_PLAYERS LEADERBOARD_MAX*12
+#define MAX_NAME_LENGTH 30
 
 typedef struct {
     char name[MAX_NAME_LENGTH];
     int score;
-    int BoardSizePreset;
+    int preset;
     char symbols; 
 } player;
 
-//You know how leaderboards work right ?
-void scores_sort(player *players, int count); 
-
-void new_highscore(const char* filename, const player* newPlayer);
-
-//Rewrites the files with the 100 (or less) best scores
-void ajustscores(const char* filename, player* players, int count);
-
-int removeDuplicatePlayers(player* players, int playerCount);
+// Adds a new high score entry to the given file
+// Returns true when the file has been written successfully.
+bool hsNew(const char* filename, const player* newPlayer);
 
  //main function to read the file, rank the players and rewrite the file
- // Returns the number of players in the array
-bool parseFile(const char* filename, player* players, int maxPlayers, int* outNumPlayers);
-    
-void player_display(player *players, int top);
+ // outNumPlayers will contain the number of players in the array
+ // Returns true when the file has been parsed successfully.
+bool hsParse(const char* filename, player* players, int* outNumPlayers);

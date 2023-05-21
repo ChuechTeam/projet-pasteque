@@ -280,9 +280,6 @@ void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData
     panelDrawText(panel, panel->width - 1, 6, ArrowRight, presetColor);
 
     int displayedPlayers = ui->numFilteredPlayers;
-    if (displayedPlayers > 12) {
-        displayedPlayers = 12;
-    }
 
     for (int i = 0; i < displayedPlayers; i++) {
         player* pl = ui->filteredPlayers[i];
@@ -324,7 +321,7 @@ void updateHighscores(MainMenuData* data, bool readFile) {
 
         // Make sure the file exists (https://stackoverflow.com/a/230068)
         if (access("highscore.pasteque", F_OK) == 0) {
-            if (!parseFile("highscore.pasteque", ui->allPlayers, MAX_PLAYERS, &ui->numAllPlayers)) {
+            if (!hsParse("highscore.pasteque", ui->allPlayers, &ui->numAllPlayers)) {
                 uiDisplayNotification(&data->notificationData,
                                       "Erreur lors de la lecture du fichier des meilleurs scores.",
                                       PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
@@ -341,7 +338,7 @@ void updateHighscores(MainMenuData* data, bool readFile) {
     int filteredIdx = 0;
     for (int i = 0; i < ui->numAllPlayers; i++) {
         player* pl = &ui->allPlayers[i];
-        if (pl->BoardSizePreset == ui->presetFilter &&
+        if (pl->preset == ui->presetFilter &&
             pl->symbols == ui->symbolsFilter) {
             ui->filteredPlayers[filteredIdx] = pl;
             filteredIdx++;

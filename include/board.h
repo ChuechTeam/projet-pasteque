@@ -7,7 +7,7 @@
 #define BOARD_HEIGHT_MAX 100
 #define MAX_SYMBOLS 6
 #define MAX_TRICKS 50
-#define MAX_TRICK_LENGTH 60
+#define MAX_TRICK_LENGTH 72
 
 // Helper macros for manipulating the cells array.
 

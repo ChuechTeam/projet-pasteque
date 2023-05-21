@@ -500,12 +500,16 @@ void submitHighScore(CrushData* data) {
     player hsPlayer;
     strncpy(hsPlayer.name, name, MAX_NAME_LENGTH);
     hsPlayer.score = data->board->score;
-    hsPlayer.BoardSizePreset = data->board->sizePreset;
+    hsPlayer.preset = data->board->sizePreset;
     hsPlayer.symbols = data->board->symbols;
-    new_highscore("highscore.pasteque", &hsPlayer);
-
-    toggleHighScoreUI(data);
-    togglePause(data);
+    if (hsNew("highscore.pasteque", &hsPlayer)) {
+        toggleHighScoreUI(data);
+        togglePause(data);
+    } else {
+        uiDisplayNotification(&data->notificationData,
+                              "Une erreur s'est produite pendant l'enregistrement du score dans le fichier.",
+                              PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
+    }
 }
 
 // ----------
