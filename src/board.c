@@ -825,7 +825,7 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
             snprintf(errorMessage, 256, "Nombre de symboles invalide (%hhd)", symbols);
         } else if (preset < BSP_SMALL || preset > BSP_CUSTOM) {
             error = true;
-            snprintf(errorMessage, 256, "Taille prédéfinie invalide (%hhd)", symbols);
+            snprintf(errorMessage, 256, "Taille prédéfinie invalide (%hhd)", preset);
         } else if (preset != BSP_CUSTOM) {
             int presetW, presetH;
             boardGetPresetDimensions(preset, &presetW, &presetH);

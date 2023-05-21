@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "colors.h"
+#include "game_state.h"
 #include <string.h>
 
 bool mouseIntersect(Panel* panel, Event* event, int x, int y, int width, int height) {
@@ -194,5 +195,91 @@ void uiKeyboardNav(UIState* state, Event* event, UINavBlock blocks[], int nBlock
     } else if (nextBlock != NULL && isNextEvent(ND_VERTICAL, event)) {
         // Go to the next block
         state->selectedIndex = nextBlock->startIndex;
+    }
+}
+
+void drawNotificationPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    NotificationPanelData* data = panelData;
+
+    for (int i = 0; i < panel->height; ++i) {
+        panelDrawLine(panel, 0, i, panel->width, ' ', data->color);
+    }
+    panelDrawText(panel, 1, 1, data->textWrapped, data->color);
+}
+
+Panel* uiAddNotificationPanel(struct PastequeGameState_S* gameState, int maxWidth, NotificationPanelData* data) {
+    if (gameState == NULL) {
+        RAGE_QUIT(10020, "GameState is NULL.");
+    } else if (data == NULL) {
+        RAGE_QUIT(10021, "NotificationPanelData is NULL.");
+    } else if (maxWidth <= 2) {
+        RAGE_QUIT(10022, "maxWidth is too low (<= 2)");
+    }
+
+    data->durationMicros = 0;
+    data->color = 1;
+    data->maxWidth = maxWidth;
+    data->text[0] = '\0';
+    data->textWrapped[0] = '\0';
+    data->panel = gsAddPanel(gameState, 0, 0, maxWidth, 4, noneAdornment, &drawNotificationPanel, data);
+    data->panel->visible = false;
+    gsMovePanelLayer(gameState, data->panel, 10);
+    // Panel will be automatically resized anyway.
+
+    return data->panel;
+}
+
+void uiDisplayNotification(NotificationPanelData* data, char* text, ColorId color, unsigned long duration) {
+    if (data == NULL) {
+        RAGE_QUIT(10021, "NotificationPanelData is NULL.");
+    } else if (text == NULL) {
+        RAGE_QUIT(10030, "text is NULL");
+    }
+
+    // Copy the text string
+    strncpy(data->text, text, NOTIF_TEXT_MAX - 1);
+    data->text[NOTIF_TEXT_MAX - 1] = '\0';
+    data->textDirty = true;
+
+    data->color = color;
+    data->durationMicros = duration;
+    data->panel->visible = true;
+}
+
+void uiUpdateNotificationPanel(NotificationPanelData* data, unsigned long deltaMicros) {
+    if (data == NULL) {
+        RAGE_QUIT(10021, "NotificationPanelData is NULL.");
+    }
+
+    // Wrap the text and recalculate the location of the panel
+    // when the text changes.
+    if (data->textDirty) {
+        panelWrapText(data->text, data->maxWidth - 2, data->textWrapped, NOTIF_TEXT_MAX);
+
+        data->textWrappedLines = 1;
+        int i = 0;
+        while (data->textWrapped[i] != '\0') {
+            if (data->textWrapped[i] == '\n') {
+                data->textWrappedLines++;
+            }
+            i++;
+        }
+
+        data->panel->height = data->textWrappedLines + 2;
+        data->panel->width = data->maxWidth;
+
+        // Place in the lower right corner.
+        data->panel->x = data->panel->pScreen->width - data->maxWidth - 1;
+        data->panel->y = data->panel->pScreen->height - data->panel->height - 1;
+
+        data->textDirty = false;
+    }
+
+    if (data->durationMicros > 0) {
+        data->durationMicros -= deltaMicros;
+        if (data->durationMicros <= 0) {
+            data->durationMicros = 0;
+            data->panel->visible = false;
+        }
     }
 }

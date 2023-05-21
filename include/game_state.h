@@ -9,9 +9,20 @@
 #include "panel.h"
 #include "scene.h"
 
+// Add the access function for Windows
+// From: https://stackoverflow.com/a/230068
+#ifdef WIN32
+#include <io.h>
+#define F_OK 0
+#define access _access
+#else
+#include <unistd.h>
+#endif
+
 // 32 panels should be enough. It's not like we're making a candy crush battle royale or something.
 #define MAX_PANELS 32
-
+#define MILLI_IN_MICROS 1000L
+#define MICROS(millis) (millis*MILLI_IN_MICROS)
 /**
  * The game state, containing all the panels and the current scene.
  */

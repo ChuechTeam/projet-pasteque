@@ -11,8 +11,6 @@
 #include "scenes/main_menu_scene.h"
 #include "highscore.h"
 
-#define MILLI_IN_MICROS 1000L
-#define MICROS(millis) (millis*MILLI_IN_MICROS)
 #define BLINKING_DURATION_MICROS MICROS(800L)
 #define GRAVITY_PERIOD_MICROS MICROS(160L)
 #define PI           3.14159265358979323846
@@ -32,11 +30,6 @@ struct CrushData_S {
     unsigned long animTimeMicros;
     bool paused;
 
-    // MESSAGES
-    char message[128];
-    ColorId messageColor;
-    long messageDurationMicros;
-
     // INPUT
     Point cursor;
     // True when the cursor focuses on a cell to swap with another.
@@ -51,13 +44,13 @@ struct CrushData_S {
     // PANELS
     Panel* boardPanel;
     Panel* scorePanel;
-    Panel* messagePanel;
+    Panel* gameOverPanel;
     Panel* comboPanel;
 
     struct PauseMenu {
         UIState state;
-        ToggleOption resumeButton;
-        ToggleOption saveButton;
+        ToggleOption mainButton;
+        ToggleOption secondaryButton;
         ToggleOption quitButton;
     } pauseUI;
     Panel* pausePanel;
@@ -69,6 +62,8 @@ struct CrushData_S {
         ToggleOption skipButton;
     } highScoreUI;
     Panel* highScorePanel;
+
+    NotificationPanelData notificationData;
 };
 
 typedef struct PauseMenu PauseMenu;
@@ -91,8 +86,6 @@ CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod) {
     // This will validate width, height, and the symbols.
     data->board = board;
     data->inputMethod = inputMethod;
-    data->message[0] = '\0';
-    data->messageColor = PASTEQUE_COLOR_WHITE;
     return data;
 }
 
@@ -129,7 +122,7 @@ char* cellToStr(CrushCell cell, ColorId* outColor) {
 
 // ----------
 // MAIN GAME PANELS
-// (Board, Score, Message, Combo)
+// (Board, Score, Game Over, Combo)
 // ----------
 
 void drawBoardPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
@@ -170,12 +163,8 @@ void drawScorePanel(Panel* panel, PastequeGameState* gameState, void* panelData)
     panelDrawText(panel, 0, 0, buffer, PASTEQUE_COLOR_BLUE);
 }
 
-void drawMessagePanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
-    CrushData* data = panelData;
-
-    if (data->messageDurationMicros > 0) {
-        panelDrawText(panel, 0, 0, data->message, data->messageColor);
-    }
+void drawGameOverPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    panelDrawTextCentered(panel, -1, -1, "GAME OVER !", PASTEQUE_COLOR_ORANGE);
 }
 
 void drawComboPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
@@ -197,14 +186,6 @@ void drawComboPanel(Panel* panel, PastequeGameState* gameState, void* panelData)
     for (int i = 0; i < data->board->combo; ++i) {
         panelDrawText(panel, 0, i + 2, data->board->comboTricks[i], PASTEQUE_COLOR_YELLOW);
     }
-}
-
-// Utility for displaying messages
-
-void displayMessage(CrushData* data, const char* str, ColorId color, long durationMicros) {
-    strncpy(data->message, str, 128);
-    data->messageColor = color;
-    data->messageDurationMicros = durationMicros;
 }
 
 // ----------
@@ -257,15 +238,19 @@ void runCursorMoveAction(CrushData* data, int deltaX, int deltaY) {
                 data->playState = CPS_EVALUATING_BOARD;
                 break;
             case SR_NO_MATCH:
-                displayMessage(data, "Impossible d'échanger pour ne former aucune ligne.", PASTEQUE_COLOR_RED,
-                               MICROS(3000));
+                uiDisplayNotification(&data->notificationData,
+                                      "Impossible d'échanger pour ne former aucune ligne.",
+                                      PASTEQUE_COLOR_WHITE_ON_RED, MICROS(3000));
                 break;
             case SR_EMPTY_CELLS:
-                displayMessage(data, "Impossible d'échanger avec une case vide.", PASTEQUE_COLOR_RED, MICROS(3000));
+                uiDisplayNotification(&data->notificationData,
+                                      "Impossible d'échanger avec une case vide.",
+                                      PASTEQUE_COLOR_WHITE_ON_RED, MICROS(3000));
                 break;
             case SR_OUT_OF_BOUNDS:
-                displayMessage(data, "Impossible d'échanger avec une case inexistante", PASTEQUE_COLOR_RED,
-                               MICROS(3000));
+                uiDisplayNotification(&data->notificationData,
+                                      "Impossible d'échanger avec une case inexistante",
+                                      PASTEQUE_COLOR_WHITE_ON_RED, MICROS(3000));
                 break;
         }
     }
@@ -415,22 +400,21 @@ void registerMouseReleased(CrushData* data, int mouseX, int mouseY) {
 
 void gameOver(CrushData* data) {
     data->playState = CPS_GAME_OVER;
-    displayMessage(data, "GAME OVER ! (Appuyez sur P pour revenir au menu)", PASTEQUE_COLOR_ORANGE, LONG_MAX);
+    data->gameOverPanel->visible = true;
     toggleHighScoreUI(data);
 }
 
 void saveGame(CrushData* data) {
     if (data->playState == CPS_GAME_OVER) {
-        // TODO: Some feedback, again!
         return;
     }
 
     char errMsg[256];
-    if (!boardSaveToFile(data->board, "savefile.pasteque", errMsg)) {
-        // TODO: Some feedback
+    if (boardSaveToFile(data->board, "savefile.pasteque", errMsg)) {
+        uiDisplayNotification(&data->notificationData, "Partie sauvegardée !",
+                              PASTEQUE_COLOR_WHITE_ON_DARK_GREEN, MICROS(5000));
     } else {
-        // TODO: Some feedback (debug is temporary)
-        debug("Fail: %s", errMsg);
+        uiDisplayNotification(&data->notificationData, errMsg, PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
     }
 }
 
@@ -442,18 +426,21 @@ void drawPauseUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
     CrushData* data = panelData;
     PauseMenu* ui = &data->pauseUI;
 
+    char* title = data->playState == CPS_GAME_OVER ? "Fin de la partie" : "Pause";
+    char* mainStr = data->playState == CPS_GAME_OVER ? "Rejouer" : "Continuer";
+    char* secondStr = data->playState == CPS_GAME_OVER ? "Voir la grille" : "Sauvegarder";
+    char* backStr = "Revenir au menu";
+
     for (int i = 0; i < panel->width; ++i) {
         ColorId color = i < 3 ? PASTEQUE_COLOR_BLACK : PASTEQUE_COLOR_WHITE;
         panelDrawLine(panel, 0, i, panel->width, ' ', color);
     }
-    char* title = data->playState == CPS_GAME_OVER ? "Fin de la partie" : "Pause";
     panelDrawTextCentered(panel, -1, 1, title, PASTEQUE_COLOR_BLACK);
 
     int btnWidth = panel->width - 2;
-    int i = 0;
-    uiDrawToggleOption(panel, &ui->state, &ui->resumeButton, 1, 4, btnWidth, "Continuer", i++, toggleStyleButton);
-    uiDrawToggleOption(panel, &ui->state, &ui->saveButton, 1, 6, btnWidth, "Sauvegarder", i++, toggleStyleButton);
-    uiDrawToggleOption(panel, &ui->state, &ui->quitButton, 1, 8, btnWidth, "Revenir au menu", i, toggleStyleButton);
+    uiDrawToggleOption(panel, &ui->state, &ui->mainButton, 1, 4, btnWidth, mainStr, 0, toggleStyleButton);
+    uiDrawToggleOption(panel, &ui->state, &ui->secondaryButton, 1, 6, btnWidth, secondStr, 1, toggleStyleButton);
+    uiDrawToggleOption(panel, &ui->state, &ui->quitButton, 1, 8, btnWidth, backStr, 2, toggleStyleButton);
 }
 
 void togglePause(CrushData* data) {
@@ -534,8 +521,10 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
     data->scorePanel = gsAddPanel(gameState, 2, data->boardPanel->y + data->boardPanel->height + 1, 32, 1,
                                   noneAdornment, &drawScorePanel, data);
 
-    data->messagePanel = gsAddPanel(gameState, 2, data->scorePanel->y + 2, 50, 2,
-                                    noneAdornment, &drawMessagePanel, data);
+    data->gameOverPanel = gsAddPanel(gameState, 2, data->scorePanel->y + 2, 20, 5,
+                                     makeAdornment(PAS_CLOSE_BORDER, PASTEQUE_COLOR_ORANGE), &drawGameOverPanel, data);
+
+    data->gameOverPanel->visible = false;
 
     data->comboPanel = gsAddPanel(gameState, data->boardPanel->x + data->boardPanel->width + 2, 2,
                                   60, 60, noneAdornment, &drawComboPanel, data);
@@ -553,6 +542,8 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
     data->highScorePanel->visible = false;
     panelCenterScreen(data->highScorePanel, true, true);
     gsMovePanelLayer(gameState, data->highScorePanel, 2);
+
+    uiAddNotificationPanel(gameState, 40, &data->notificationData);
 
     data->playState = CPS_EVALUATING_BOARD;
 }
@@ -597,17 +588,13 @@ void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long de
                 }
             }
         }
-
-        // Update the message duration timer
-        if (data->messageDurationMicros > 0) {
-            data->messageDurationMicros -= (long) deltaTime;
-            if (data->messageDurationMicros < 0) { data->messageDurationMicros = 0; }
-        }
     }
 
     // Make sure our modal panels are centered if the window size changes
     panelCenterScreen(data->pausePanel, true, true);
     panelCenterScreen(data->highScorePanel, true, true);
+
+    uiUpdateNotificationPanel(&data->notificationData, deltaTime);
 }
 
 void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
@@ -623,29 +610,44 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
         UINavBlock blocks[] = {{0, 2, ND_VERTICAL}};
         uiKeyboardNav(&pauseUI->state, pEvent, blocks, 1);
 
-        if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->resumeButton, pEvent)) {
-            togglePause(data);
-        } else if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->saveButton, pEvent)) {
-            saveGame(data);
-            togglePause(data);
+        if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->mainButton, pEvent)) {
+            if (data->playState == CPS_GAME_OVER) {
+                // Play again
+                CrushBoard* orig = data->board;
+                CrushBoard* board = makeCrushBoard(orig->sizePreset, orig->width, orig->height, orig->symbols);
+                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, data->inputMethod));
+                return;
+            } else {
+                // Continue
+                togglePause(data);
+            }
+        } else if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->secondaryButton, pEvent)) {
+            if (data->playState == CPS_GAME_OVER) {
+                // Contemple
+                togglePause(data);
+            } else {
+                // Save
+                saveGame(data);
+                togglePause(data);
+            }
         } else if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->quitButton, pEvent)) {
             gsSwitchScene(gameState, SN_MAIN_MENU, makeMainMenuData());
         }
-    } else if (hsUI->state.focused) {;
+    } else if (hsUI->state.focused) { ;
         if (uiHandleTextInputEvent(&hsUI->state, &hsUI->nameInput, pEvent)) {
             return;
-        } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->confirmButton, pEvent))  {
+        } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->confirmButton, pEvent)) {
             submitHighScore(data);
             return;
-        } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->skipButton, pEvent))  {
+        } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->skipButton, pEvent)) {
             toggleHighScoreUI(data);
             togglePause(data);
             return;
         }
 
         UINavBlock blocks[] = {
-            {0, 0, ND_VERTICAL},
-            {1, 2, ND_HORIZONTAL}
+                {0, 0, ND_VERTICAL},
+                {1, 2, ND_HORIZONTAL}
         };
         uiKeyboardNav(&hsUI->state, pEvent, blocks, 2);
     } else {
@@ -677,11 +679,6 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
         }
         if (code == KEY_N) {
             saveGame(data);
-        }
-        if (code == KEY_H) {
-            // TEMP: show highscore panel
-            hsUI->state.focused = true;
-            data->highScorePanel->visible = true;
         }
     }
 }

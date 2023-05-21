@@ -6,6 +6,7 @@
 #include "panel.h"
 #include "game_state.h"
 #include <string.h>
+#include <ctype.h>
 #include "libGameRGR2.h"
 
 const PanelAdornment noneAdornment = {PAS_NONE, 0, -1, -1, -1};
@@ -225,7 +226,7 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId) {
 
             // Copy to a buffer so we get only the line printed out (not the entire text).
             char lineBoundedStr[256];
-            memcpy(lineBoundedStr, pText + lineBegin, sizeof(char)*lineLen);
+            memcpy(lineBoundedStr, pText + lineBegin, sizeof(char) * lineLen);
             lineBoundedStr[lineLen] = '\0'; // Add the null character
 
             // Draw to the screen, and clamp the line before.
@@ -259,19 +260,6 @@ void panelTranslate(Panel* pPanel, int x, int y) {
     pPanel->y = y;
 }
 
-bool panelContains(Panel* pPanel, int x, int y) {
-    int xMin = pPanel->x;
-    int xMax = pPanel->x + pPanel->width; // Exclusive
-    int yMin = pPanel->y;
-    int yMax = pPanel->y + pPanel->height; // Exclusive too
-
-    return xMin <= x && x < xMax && yMin <= y && y < yMax;
-}
-
-bool panelContainsMouse(Panel* pPanel, Event* pEvent) {
-    return panelContains(pPanel, pEvent->mouseEvent.x, pEvent->mouseEvent.y);
-}
-
 PanelAdornment makeAdornment(PanelAdornmentStyle style, int color) {
     PanelAdornment adornment;
     adornment.style = style;
@@ -301,11 +289,8 @@ void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId) 
         }
     }
     if (y == -1) {
-        if (length <= pPanel->height) {
-            y = (pPanel->height - length) / 2;
-        } else {
-            y = 0;
-        }
+        // Assumes single line.
+        y = pPanel->height / 2;
     }
 
     panelDrawText(pPanel, x, y, pText, clrId);
@@ -332,4 +317,80 @@ void panelCenterScreen(Panel* pPanel, bool centerX, bool centerY) {
     }
 
     panelTranslate(pPanel, x, y);
+}
+
+void panelWrapText(char* pText, int width, char outWrappedText[], int wrappedTextSize) {
+    // A basic line-wrapping algorithm.
+
+    bool stringEnd = false;
+    int wordStart = 0;
+    int outCursor = 0;
+    int lineLength = 0; // NOTE: This also counts trailing spaces. This could be improved in the future.
+    for (int i = 0; !stringEnd; ++i) {
+        if (pText[i] == '\0') {
+            stringEnd = true;
+        }
+
+        if (isspace(pText[i]) || stringEnd) {
+            int wordEnd = i; // Exclusive
+            int chars = wordEnd - wordStart;
+
+            if (chars == 1 && (i == 0 || isspace(pText[i - 1]))) {
+                // Just printing out a single space, followed by another space before
+                // Like HELLO    WORLD
+                if (lineLength == width) {
+                    // Ignore excess spaces
+                } else {
+                    outWrappedText[outCursor++] = pText[i];
+                    lineLength++;
+                }
+            } else {
+                // When the word is too long for the line, add a line break.
+                if ((lineLength + chars) > width) {
+                    // Remove any extra spaces before the word, move the cursor back
+                    // to overwrite the previous spaces.
+                    while (outCursor > 0 && isspace(outWrappedText[outCursor - 1])) {
+                        outCursor--;
+                    }
+                    outWrappedText[outCursor++] = '\n';
+                    lineLength = 0;
+                }
+
+                // Copy the word to the out buffer.
+                if ((outCursor + chars) > wrappedTextSize - 1) {
+                    // Truncate the string when we're going out of the max size.
+                    // ExcessChars = (cur + ch) - (wts - 1)
+                    //             = (cur + ch) - wts + 1
+                    // CharsToCopy = ch - ExcessChars
+                    //             = ch - cur - ch + wts - 1
+                    //             = wts - cur - 1
+
+                    memcpy(outWrappedText + outCursor, pText + wordStart, wrappedTextSize - outCursor - 1);
+                    outCursor = wrappedTextSize - 1;
+                } else {
+                    memcpy(outWrappedText + outCursor, pText + wordStart, chars);
+                    outCursor += chars;
+                }
+
+                // Add the space after the word.
+                if (outCursor < wrappedTextSize - 1 && !stringEnd) {
+                    outWrappedText[outCursor++] = pText[i];
+                }
+
+                // Make sure to reset the line length when a manual line break is inserted.
+                if (pText[i] == '\n') {
+                    lineLength = 0;
+                } else {
+                    lineLength += chars + 1; // Add the space in the count too
+                }
+            }
+            wordStart = i + 1;
+
+            if (outCursor == wrappedTextSize - 1) {
+                stringEnd = true;
+            }
+        }
+    }
+
+    outWrappedText[outCursor] = '\0';
 }

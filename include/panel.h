@@ -159,6 +159,15 @@ void panelDrawText(Panel* pPanel, int x, int y, char* pText, int clrId);
 void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId);
 
 /**
+ * Wraps the given text, limited to a certain width, to a given buffer.
+ * @param pText the text to wrap
+ * @param width the max width of the lines
+ * @param outWrappedText the buffer containing the wrapped text
+ * @param wrappedTextSize the size of the buffer
+ */
+void panelWrapText(char* pText, int width, char outWrappedText[], int wrappedTextSize);
+
+/**
  * Moves a panel to the given coordinates.
  * The coordinates can be outside of the screen, and even negative.
  *
@@ -177,28 +186,9 @@ void panelTranslate(Panel* pPanel, int x, int y);
 void panelCenterScreen(Panel* pPanel, bool centerX, bool centerY);
 
 /**
- * Returns true if the panel contains the point (x, y), in screen space.
- *
- * @param pPanel the panel
- * @param x the X coordinate of the point
- * @param y the Y coordinate of the point
- */
-bool panelContains(Panel* pPanel, int x, int y);
-
-/**
- * Returns true if the mouse position is inside the panel.
- *
- * @param pPanel the panel
- * @param pEvent the event containing mouse coordinates
- */
-bool panelContainsMouse(Panel* pPanel, Event* pEvent);
-
-/**
  * Creates a panel adornment with the given style and color.
- * If the verticalColor is -1, then horizontalColor is used for both directions.
  * @param style the style
  * @param color the horizontal color
- * @param verticalColor the vertical color (or horizontalColor if 0)
  * @return the panel adornment
  */
 PanelAdornment makeAdornment(PanelAdornmentStyle style, int color);

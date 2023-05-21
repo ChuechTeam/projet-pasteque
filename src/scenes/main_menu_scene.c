@@ -76,6 +76,8 @@ struct MainMenuData_S {
         int numFilteredPlayers;
     } highScoreUI;
     Panel* highScorePanel;
+
+    NotificationPanelData notificationData;
 };
 
 typedef struct MainSubMenu MainSubMenu;
@@ -320,7 +322,17 @@ void updateHighscores(MainMenuData* data, bool readFile) {
         memset(ui->allPlayers, 0, sizeof(player) * MAX_PLAYERS);
         ui->numAllPlayers = 0;
 
-        parseFile("highscore.pasteque", ui->allPlayers, MAX_PLAYERS, &ui->numAllPlayers);
+        // Make sure the file exists (https://stackoverflow.com/a/230068)
+        if (access("highscore.pasteque", F_OK) == 0) {
+            if (!parseFile("highscore.pasteque", ui->allPlayers, MAX_PLAYERS, &ui->numAllPlayers)) {
+                uiDisplayNotification(&data->notificationData,
+                                      "Erreur lors de la lecture du fichier des meilleurs scores.",
+                                      PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
+            }
+        } else {
+            uiDisplayNotification(&data->notificationData, "Le fichier contenant les meilleurs scores n'existe pas.",
+                                  PASTEQUE_COLOR_WHITE_ON_DARK_ORANGE, MICROS(5000));
+        }
     }
 
     memset(ui->filteredPlayers, 0, sizeof(player*) * MAX_PLAYERS);
@@ -423,6 +435,10 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
     data->highScoreUI.presetFilter = BSP_MEDIUM;
     data->highScoreUI.symbolsFilter = 4;
 
+    // NOTIFICATION PANEL
+    // --------------------------------------------------------
+    uiAddNotificationPanel(gameState, 50, &data->notificationData);
+
     // PLAY SETTINGS CONFIG
     // --------------------------------------------------------
     data->playSettings.sizePreset = BSP_MEDIUM;
@@ -431,6 +447,7 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
 }
 
 void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned long deltaTime) {
+    uiUpdateNotificationPanel(&data->notificationData, deltaTime);
 }
 
 void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEvent) {
@@ -451,12 +468,17 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->resumeButton, pEvent)) {
             char errMsg[256];
             CrushBoard* board;
-            if (boardReadFromFile("savefile.pasteque", &board, errMsg)) {
-                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
-                return;
+            // Make sure the file exists.
+            if (access("savefile.pasteque", F_OK) == 0) {
+                if (boardReadFromFile("savefile.pasteque", &board, errMsg)) {
+                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
+                    return;
+                } else {
+                    uiDisplayNotification(&data->notificationData, errMsg, PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
+                }
             } else {
-                debug("Fail !\n");
-                debug("Msg: [%s]\n", errMsg);
+                uiDisplayNotification(&data->notificationData, "Aucune partie n'a été sauvegardée.",
+                                      PASTEQUE_COLOR_WHITE_ON_DARK_ORANGE, MICROS(5000));
             }
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {
             updateHighscores(data, true);

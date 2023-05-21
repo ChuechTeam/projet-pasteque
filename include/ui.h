@@ -14,6 +14,7 @@
 #include "colors.h"
 
 #define TEXT_INPUT_MAX 128
+#define NOTIF_TEXT_MAX 256
 
 typedef struct {
     int inactiveColorId;
@@ -72,6 +73,18 @@ typedef struct {
     NavigationDirection direction;
 } UINavBlock;
 
+typedef struct {
+    Panel* panel;
+    char text[NOTIF_TEXT_MAX];
+    char textWrapped[NOTIF_TEXT_MAX];
+    int textWrappedLines;
+    // True when we need to update textWrapped and textWrappedLines.
+    bool textDirty;
+    ColorId color;
+    long durationMicros;
+    int maxWidth;
+} NotificationPanelData;
+
 static ToggleOptionStyle toggleStyleDefault = {PASTEQUE_COLOR_WHITE,
                                                PASTEQUE_COLOR_WATERMELON_BG_DYN,
                                                PASTEQUE_COLOR_BLACK,
@@ -101,5 +114,13 @@ bool uiHandleTextInputEvent(UIState* state, TextInput* input, Event* event);
 
 // End is inclusive!
 void uiKeyboardNav(UIState* state, Event* event, UINavBlock blocks[], int nBlocks);
+
+// ----
+// NOTIFICATION PANEL
+// ----
+
+Panel* uiAddNotificationPanel(struct PastequeGameState_S* gameState, int maxWidth, NotificationPanelData* data);
+void uiDisplayNotification(NotificationPanelData* data, char* text, ColorId color, unsigned long duration);
+void uiUpdateNotificationPanel(NotificationPanelData* data, unsigned long deltaMicros);
 
 #endif //PROJET_PASTEQUE_UI_H
