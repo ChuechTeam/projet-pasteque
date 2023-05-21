@@ -432,7 +432,9 @@ bool boardMarkAlignedCells(CrushBoard* board) {
             length = 2; // First and last cell.
 
             // Find forward cells A [A A] B B A A A
-            while (startX < endX) { // Make sure we don't loop forever if we have a full line
+            // Make sure we don't loop forever if we have a full line,
+            // for example, stop here: A A |A A (| is the startX cursor) [startX = 2; length 2 + 2 = 4]
+            while (startX < endX - 2) {
                 if (lineContinues(board, startX, y, 1, 0, LINE_END_AUTODETECT)) {
                     startX++;
                     length++;
@@ -442,7 +444,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
             }
 
             // Find previous cells A A A B B [A A] A
-            while (endX > startX) {
+            while (endX - 2 > startX) {
                 if (lineContinues(board, endX - 1, y, -1, 0, LINE_END_AUTODETECT)) {
                     endX--;
                     length++;
@@ -493,7 +495,9 @@ bool boardMarkAlignedCells(CrushBoard* board) {
             length = 2;
 
             // Find forward cells A [A A] B B A A A (vertically)
-            while (startY < endY) { // Make sure we don't loop forever if we have a full line
+            // Make sure we don't loop forever if we have a full line,
+            // for example, stop here: A A |A A (| is the startY cursor) [startY = 2; length 2 + 2 = 4]
+            while (startY < endY - 2) {
                 if (lineContinues(board, x, startY, 0, 1, LINE_END_AUTODETECT)) {
                     startY++;
                     length++;
@@ -503,7 +507,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
             }
 
             // Find previous cells A A A B B [A A] A (vertically)
-            while (endY > startY) {
+            while (endY - 2 > startY) {
                 if (lineContinues(board, x, endY - 1, 0, -1, LINE_END_AUTODETECT)) {
                     endY--;
                     length++;
