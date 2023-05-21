@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 //You know how leaderboards work right ?
 void scores_sort(player *players, int count){
@@ -71,9 +72,18 @@ bool hsNew(const char* filename, const player* newPlayer) {
         return false;
     }
 
+    // Replace spaces with ~ (tilde)
+    char name[MAX_NAME_LENGTH];
+    strncpy(name, newPlayer->name, MAX_NAME_LENGTH-1);
+    for (int i = 0; name[i] != '\0'; ++i) {
+        if (isspace(name[i])) {
+            name[i] = '~';
+        }
+    }
+
     bool success;
     success = fprintf(file, "\nScore : %d by %s using the BoardSizePreset %d playing with %hhd symbols\n",
-                      newPlayer->score, newPlayer->name, newPlayer->preset, newPlayer->symbols);
+                      newPlayer->score, name, newPlayer->preset, newPlayer->symbols);
 
     fclose(file);
 
@@ -101,6 +111,12 @@ bool hsParse(const char* filename, player* players, int* outNumPlayers) {
             continue;  // Skip this line and continue to the next one
         }
 
+        // Replace ~ (tilde) with spaces
+        for (int i = 0; name[i] != '\0'; ++i) {
+            if (name[i] == '~') {
+                name[i] = ' ';
+            }
+        }
         // Stores the informations in the players array
         strncpy(players[count].name, name, MAX_NAME_LENGTH);
         players[count].score = score;

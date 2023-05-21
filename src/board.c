@@ -433,7 +433,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
 
             // Find forward cells A [A A] B B A A A
             // Make sure we don't loop forever if we have a full line,
-            // for example, stop here: A A |A A (| is the startX cursor) [startX = 2; length 2 + 2 = 4]
+            // for example, stop here: A A A| A (| is the startX cursor) [startX = 2; length 2 + 2 = 4]
             while (startX < endX - 2) {
                 if (lineContinues(board, startX, y, 1, 0, LINE_END_AUTODETECT)) {
                     startX++;
@@ -453,12 +453,19 @@ bool boardMarkAlignedCells(CrushBoard* board) {
                 }
             }
 
+            // Further delimit the search interval
+            // Example: A A A <B B >A A
+            // startX (<) = 3
+            // endX (>) = 6 (exclusive)
+            startX++;
+            endX--;
+
             // Mark the cells for destruction, both from start and end.
             if (length >= 3) {
-                for (int xs = 0; xs <= startX; xs++) {
+                for (int xs = 0; xs < startX; xs++) {
                     CELL(board, xs, y).markedForDestruction = true;
                 }
-                for (int xe = board->width; xe >= endX; xe--) {
+                for (int xe = board->width; xe > endX; xe--) {
                     CELL(board, xe - 1, y).markedForDestruction = true;
                 }
                 addLineScore(board, length);
@@ -496,7 +503,7 @@ bool boardMarkAlignedCells(CrushBoard* board) {
 
             // Find forward cells A [A A] B B A A A (vertically)
             // Make sure we don't loop forever if we have a full line,
-            // for example, stop here: A A |A A (| is the startY cursor) [startY = 2; length 2 + 2 = 4]
+            // for example, stop here: A A A| A (| is the startY cursor) [startY = 2; length 2 + 2 = 4]
             while (startY < endY - 2) {
                 if (lineContinues(board, x, startY, 0, 1, LINE_END_AUTODETECT)) {
                     startY++;
@@ -516,12 +523,19 @@ bool boardMarkAlignedCells(CrushBoard* board) {
                 }
             }
 
+            // Further delimit the search interval
+            // Example: A A A <B B >A A
+            // startY (<) = 3
+            // endY (>) = 6 (exclusive)
+            startY++;
+            endY--;
+
             // Mark the cells for destruction, both from start and end.
             if (length >= 3) {
-                for (int ys = 0; ys <= startY; ys++) {
+                for (int ys = 0; ys < startY; ys++) {
                     CELL(board, x, ys).markedForDestruction = true;
                 }
-                for (int ye = board->height; ye >= endY; ye--) {
+                for (int ye = board->height; ye > endY; ye--) {
                     CELL(board, x, ye - 1).markedForDestruction = true;
                 }
                 addLineScore(board, length);
