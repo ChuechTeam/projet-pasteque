@@ -503,6 +503,9 @@ void submitHighScore(CrushData* data) {
     hsPlayer.preset = data->board->sizePreset;
     hsPlayer.symbols = data->board->symbols;
     if (hsNew("highscore.pasteque", &hsPlayer)) {
+        if (strcmp(name, "VOTRE NOM") == 0) {
+            uiDisplayNotification(&data->notificationData, "MDRRRRRRR", PASTEQUE_COLOR_WHITE_ON_DARK_GREEN, MICROS(5000));
+        }
         toggleHighScoreUI(data);
         togglePause(data);
     } else {
