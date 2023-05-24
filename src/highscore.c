@@ -72,9 +72,11 @@ bool hsNew(const char* filename, const player* newPlayer) {
         return false;
     }
 
-    // Replace spaces with ~ (tilde)
+    // Replace spaces with ~ (tilde).
+    // Do some extra checks if the string is not null-terminated.
     char name[MAX_NAME_LENGTH];
     strncpy(name, newPlayer->name, MAX_NAME_LENGTH-1);
+    name[MAX_NAME_LENGTH-1] = '\0';
     for (int i = 0; name[i] != '\0'; ++i) {
         if (isspace(name[i])) {
             name[i] = '~';
@@ -107,7 +109,9 @@ bool hsParse(const char* filename, player* players, int* outNumPlayers) {
         int score;
         int preset;
         char symbols;
-        if (sscanf(line, "Score : %d by %s using the BoardSizePreset %d playing with %hhd symbols", &score, name, &preset, &symbols) != 4) {
+        // %29s limits the string to 29 characters.
+        if (sscanf(line, "Score : %d by %29s using the BoardSizePreset %d playing with %hhd symbols",
+                   &score, name, &preset, &symbols) != 4) {
             continue;  // Skip this line and continue to the next one
         }
 
@@ -118,7 +122,7 @@ bool hsParse(const char* filename, player* players, int* outNumPlayers) {
             }
         }
         // Stores the informations in the players array
-        strncpy(players[count].name, name, MAX_NAME_LENGTH);
+        strcpy(players[count].name, name);
         players[count].score = score;
         players[count].preset = preset;
         players[count].symbols = symbols;
