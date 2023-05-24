@@ -21,7 +21,9 @@ typedef enum {
     // The main menu of the game
     SN_MAIN_MENU,
     // The actual game! With stuff to crush and all that good stuff!
-    SN_CRUSH
+    SN_CRUSH,
+    // The story mode (lol)
+    SN_STORY
 } SceneName;
 
 struct PastequeGameState_S; // Forward declare the GameState to avoid circular dependency issues

@@ -23,8 +23,9 @@ typedef enum {
 struct CrushData_S; // Defined in crush_scene.c
 typedef struct CrushData_S CrushData;
 
-// TODO: Multiple players? Custom input method?
-CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod);
+// TODO: Multiple players?
+// -1 to storyIndex disables the story
+CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod, int storyIndex);
 
 void crushInit(PastequeGameState* gameState, CrushData* data);
 

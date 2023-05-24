@@ -165,7 +165,7 @@ void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId);
  * @param outWrappedText the buffer containing the wrapped text
  * @param wrappedTextSize the size of the buffer
  */
-void panelWrapText(char* pText, int width, char outWrappedText[], int wrappedTextSize);
+void panelWrapText(const char* pText, int width, char outWrappedText[], int wrappedTextSize);
 
 /**
  * Moves a panel to the given coordinates.

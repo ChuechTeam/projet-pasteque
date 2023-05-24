@@ -10,6 +10,7 @@
 #include "ui.h"
 #include "scenes/main_menu_scene.h"
 #include "highscore.h"
+#include "scenes/story_scene.h"
 
 #define BLINKING_DURATION_MICROS MICROS(800L)
 #define GRAVITY_PERIOD_MICROS MICROS(160L)
@@ -40,6 +41,10 @@ struct CrushData_S {
     Point mousePressPos;
     bool mouseClickPending;
     CrushInputMethod inputMethod;
+
+    // STORY
+    int storyIndex;
+    bool storyModeActivated;
 
     // PANELS
     Panel* boardPanel;
@@ -78,7 +83,7 @@ void toggleHighScoreUI(CrushData* data);
 // (Create a game, Symbol char, UI switch)
 // ----------
 
-CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod) {
+CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod, int storyIndex) {
     CrushData* data = calloc(1, sizeof(CrushData));
     if (data == NULL) {
         RAGE_QUIT(2001, "Failed to allocate CrushData.");
@@ -87,6 +92,8 @@ CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod) {
     // This will validate width, height, and the symbols.
     data->board = board;
     data->inputMethod = inputMethod;
+    data->storyIndex = storyIndex;
+    data->storyModeActivated = storyIndex >= 0;
     return data;
 }
 
@@ -422,7 +429,7 @@ void drawPauseUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
     PauseMenu* ui = &data->pauseUI;
 
     char* title = data->playState == CPS_GAME_OVER ? "Fin de la partie" : "Pause";
-    char* mainStr = data->playState == CPS_GAME_OVER ? "Rejouer" : "Continuer";
+    char* mainStr = (data->playState == CPS_GAME_OVER && !data->storyModeActivated) ? "Rejouer" : "Continuer";
     char* secondStr = data->playState == CPS_GAME_OVER ? "Voir la grille" : "Sauvegarder";
     char* backStr = "Revenir au menu";
 
@@ -649,12 +656,23 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
         UINavBlock blocks[] = {{0, 2, ND_VERTICAL}};
         uiKeyboardNav(&pauseUI->state, pEvent, blocks, 1);
 
+        if (pEvent->code == KEY_S && data->storyModeActivated) {
+            // Temporary cheat: go to next story
+            gsSwitchScene(gameState, SN_STORY, makeStoryData(data->storyIndex + 1));
+            return;
+        }
+
         if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->mainButton, pEvent)) {
             if (data->playState == CPS_GAME_OVER) {
-                // Play again
-                CrushBoard* orig = data->board;
-                CrushBoard* board = makeCrushBoard(orig->sizePreset, orig->width, orig->height, orig->symbols);
-                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, data->inputMethod));
+                if (data->storyModeActivated) {
+                    // Continue the story
+                    gsSwitchScene(gameState, SN_STORY, makeStoryData(data->storyIndex + 1));
+                } else {
+                    // Play again
+                    CrushBoard* orig = data->board;
+                    CrushBoard* board = makeCrushBoard(orig->sizePreset, orig->width, orig->height, orig->symbols);
+                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, data->inputMethod, -1));
+                }
                 return;
             } else {
                 // Continue
