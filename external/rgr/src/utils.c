@@ -172,8 +172,9 @@ void drawText(Screen* pScr, int x, int y, char* pText, int clrId){
             RAGE_QUIT(52, "pText string exceeds 255 chars !\n");            
         } 
         strcpy(pWrite, pText);
-        pWrite[sz] = '\0';        
-        printw(pWrite);
+        pWrite[sz] = '\0';
+        // PASTEQUE MOD: bug fix for strings with percents
+        printw("%s", pWrite);
         //attroff(COLOR_PAIR(clrId));
     }
 }

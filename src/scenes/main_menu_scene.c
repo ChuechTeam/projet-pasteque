@@ -8,6 +8,7 @@
 #include "ui.h"
 #include "board.h"
 #include "highscore.h"
+#include "scenes/story_scene.h"
 
 #define TITLE_WIDTH 40
 #define TITLE_HEIGHT 4
@@ -32,6 +33,7 @@ struct MainMenuData_S {
         UIState state;
         ToggleOption playButton;
         ToggleOption resumeButton;
+        ToggleOption storyModeButton;
         ToggleOption highScoresButton;
         ToggleOption quitButton;
     } mainUI;
@@ -118,9 +120,11 @@ void drawMainUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
 
     uiDrawToggleOption(panel, &ui->state, &ui->playButton, 2, 0, BUTTON_WIDTH, "Jouer", 0, toggleStyleButton);
     uiDrawToggleOption(panel, &ui->state, &ui->resumeButton, 2, 2, BUTTON_WIDTH, "Reprendre", 1, toggleStyleButton);
-    uiDrawToggleOption(panel, &ui->state, &ui->highScoresButton, 2, 4, BUTTON_WIDTH, "Meilleurs scores", 2,
+    uiDrawToggleOption(panel, &ui->state, &ui->storyModeButton, 2, 4, BUTTON_WIDTH, "Mode histoire", 2,
                        toggleStyleButton);
-    uiDrawToggleOption(panel, &ui->state, &ui->quitButton, 2, 6, BUTTON_WIDTH, "Quitter", 3, toggleStyleButton);
+    uiDrawToggleOption(panel, &ui->state, &ui->highScoresButton, 2, 6, BUTTON_WIDTH, "Meilleurs scores", 3,
+                       toggleStyleButton);
+    uiDrawToggleOption(panel, &ui->state, &ui->quitButton, 2, 8, BUTTON_WIDTH, "Quitter", 4, toggleStyleButton);
 
     // Draw the little arrow on the left.
     if (ui->state.focused) {
@@ -402,10 +406,10 @@ void mainMenuInit(PastequeGameState* gameState, MainMenuData* data) {
                                   &drawTitlePanel, NULL);
     data->subtitlePanel = gsAddPanel(gameState, 2, 11, 30, 2, noneAdornment, &drawSubtitlePanel, NULL);
 
-    data->mainUIPanel = gsAddPanel(gameState, 4, 14, 26, 8, noneAdornment, &drawMainUI, data);
+    data->mainUIPanel = gsAddPanel(gameState, 4, 14, 26, 10, noneAdornment, &drawMainUI, data);
     data->mainUI.state.focused = true;
 
-    data->adPanel = gsAddPanel(gameState, 4, 23, 26, 6, makeAdornment(PAS_SINGLE_BORDER, PASTEQUE_COLOR_YELLOW),
+    data->adPanel = gsAddPanel(gameState, 4, 25, 26, 6, makeAdornment(PAS_SINGLE_BORDER, PASTEQUE_COLOR_YELLOW),
                                &drawAdPanel, NULL);
 
     // PLAY SUBMENU (Symbols, dimensions)
@@ -455,7 +459,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
     // We're in the main UI buttons
     if (mainUI->state.focused) {
         // Add keyboard navigation (down and up arrows keys, Z and S keys)
-        UINavBlock blocks[] = {{0, 3, ND_VERTICAL}};
+        UINavBlock blocks[] = {{0, 4, ND_VERTICAL}};
         uiKeyboardNav(&mainUI->state, pEvent, blocks, 1);
 
         // Handle any button click.
@@ -468,7 +472,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             // Make sure the file exists.
             if (access("savefile.pasteque", F_OK) == 0) {
                 if (boardReadFromFile("savefile.pasteque", &board, errMsg)) {
-                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
+                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL, -1));
                     return;
                 } else {
                     uiDisplayNotification(&data->notificationData, errMsg, PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
@@ -477,6 +481,8 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
                 uiDisplayNotification(&data->notificationData, "Aucune partie n'a été sauvegardée.",
                                       PASTEQUE_COLOR_WHITE_ON_DARK_ORANGE, MICROS(5000));
             }
+        } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->storyModeButton, pEvent)) {
+            gsSwitchScene(gameState, SN_STORY, makeStoryData(0));
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {
             updateHighscores(data, true);
             switchSubMenu(data, data->highScorePanel, &data->highScoreUI.state);
@@ -528,7 +534,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         if (uiHandleToggleOptionEvent(&playUI->state, &playUI->playButton, pEvent)) {
             PlaySettings params = data->playSettings;
             CrushBoard* board = makeCrushBoard(params.sizePreset, params.width, params.height, params.symbols);
-            gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
+            gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL, -1));
             return;
         }
 

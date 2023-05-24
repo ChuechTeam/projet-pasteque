@@ -21,6 +21,9 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
     if (symbols < 4 || symbols > 6) {
         RAGE_QUIT(2020, "Symbol count invalid (symbols=%d)", symbols);
     }
+    // Enforce the preset dimensions.
+    boardGetPresetDimensions(sizePreset, &width, &height);
+
     int cellCount = width * height;
     CrushBoard* board = calloc(1, sizeof(CrushBoard) + sizeof(CrushCell) * cellCount);
     if (board == NULL) {
@@ -28,13 +31,8 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
     }
     board->sizePreset = sizePreset;
     board->symbols = symbols;
-    if (sizePreset == BSP_CUSTOM) {
-        board->height = height;
-        board->width = width;
-    } else {
-        // Enforce the preset dimensions.
-        boardGetPresetDimensions(sizePreset, &board->width, &board->height);
-    }
+    board->height = height;
+    board->width = width;
     board->cellCount = cellCount;
     board->score = 0;
     board->combo = 0;
