@@ -311,7 +311,7 @@ void addLineScore(CrushBoard* board, int length) {
         // Override other tricks on the start of the array.
         // And make sure the string is empty.
         trickIndex = trickIndex % MAX_TRICKS;
-        memset(board->comboTricks[trickIndex], 0, sizeof(char)*MAX_TRICK_LENGTH);
+        memset(board->comboTricks[trickIndex], 0, sizeof(char) * MAX_TRICK_LENGTH);
     }
     int extraCells = length - 3;
     // Chances are in 1/1000 format.
@@ -831,7 +831,7 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
             // Parsed
         } else if (preset == -1 && sscanf(line, "preset=%d", (int*) &preset)) {
             // Parsed
-        } else if (playTime == -1 && sscanf(line, "playTime=%ld", &playTime)) {
+        } else if (playTime == -1 && sscanf(line, "playtime=%ld", &playTime)) {
             // Parsed
         } else if (strcmp(line, "cells:\n") == 0) {
             parseCells = true;
@@ -852,6 +852,9 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
         } else if (symbols < 4 || symbols > 6) {
             error = true;
             snprintf(errorMessage, 256, "Nombre de symboles invalide (%hhd)", symbols);
+        } else if (playTime < 0) {
+            error = true;
+            snprintf(errorMessage, 256, "Temps de jeu invalide (%ld)", playTime);
         } else if (preset < BSP_SMALL || preset > BSP_CUSTOM) {
             error = true;
             snprintf(errorMessage, 256, "Taille prédéfinie invalide (%hhd)", preset);
@@ -864,9 +867,6 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
                          "Dimensions non correspondantes à la taille prédéfinie (%d, %d) != (%d, %d)",
                          width, height, presetW, presetH);
             }
-        } else if (playTime < 0) {
-            error = true;
-            snprintf(errorMessage, 256, "Temps de jeu invalide (%ld)", playTime);
         }
     }
 
