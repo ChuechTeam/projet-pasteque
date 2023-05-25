@@ -766,6 +766,7 @@ bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]
     success &= fprintf(file, "preset=%d\n", board->sizePreset) != EOF;
     success &= fprintf(file, "symbols=%hhd\n", board->symbols) != EOF;
     success &= fprintf(file, "score=%d\n", board->score) != EOF;
+    success &= fprintf(file, "playtime=%ld\n", board->playTime) != EOF;
     success &= fprintf(file, "cells:\n") != EOF;
     for (int y = 0; y < board->height; ++y) {
         for (int x = 0; x < board->width; ++x) {
@@ -810,6 +811,7 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
     int width = -1, height = -1, score = -1;
     char symbols = 0;
     BoardSizePreset preset = -1;
+    long playTime = -1;
     bool error = false;
     bool fileError = false;
     bool parseCells = false;
@@ -828,6 +830,8 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
         } else if (symbols == 0 && sscanf(line, "symbols=%hhd", &symbols)) {
             // Parsed
         } else if (preset == -1 && sscanf(line, "preset=%d", (int*) &preset)) {
+            // Parsed
+        } else if (playTime == -1 && sscanf(line, "playTime=%ld", &playTime)) {
             // Parsed
         } else if (strcmp(line, "cells:\n") == 0) {
             parseCells = true;
@@ -860,6 +864,9 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
                          "Dimensions non correspondantes à la taille prédéfinie (%d, %d) != (%d, %d)",
                          width, height, presetW, presetH);
             }
+        } else if (playTime < 0) {
+            error = true;
+            snprintf(errorMessage, 256, "Temps de jeu invalide (%ld)", playTime);
         }
     }
 

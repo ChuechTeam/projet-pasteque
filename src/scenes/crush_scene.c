@@ -557,6 +557,8 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
 
 void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long deltaTime) {
     if (!data->paused) {
+        data->board->playTime += deltaTime;
+
         if (data->playState == CPS_EVALUATING_BOARD) {
             bool markedSomething = boardMarkAlignedCells(data->board);
 
