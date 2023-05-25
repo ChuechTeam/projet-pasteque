@@ -46,7 +46,7 @@ struct StoryData_S {
     Panel* continuePanel;
 };
 
-const int stories = 4;
+const int stories = 5;
 
 StoryData* makeStoryData(int storyIndex) {
     if (storyIndex < 0 || storyIndex >= stories) {

@@ -37,9 +37,14 @@
 "/N./P./P./PNon. Je/P./P./P. J-Je/P./P./P. Désolé, mais…/P Tu…/P Tu dois me laisser une seconde./P Le livre, il…/P Il a fait un bruit tellement strident./P"\
 " Les vitres se sont encore brisées…/P Et…/P Il a dit le Mot./P Laisse-moi tranquille, juste un instant…"
 
-#define STORY_TEXT_4 "C'est fini lol"
+#define STORY_TEXT_4 "/NC’est bon./P Je vais mieux./P Excuse-moi pour ce contretemps./P Ce foutu livre a encore décidé de nous mener la vie dure…/P Ne parlons même pas du contenu./P Il est de mon devoir de te raconter l’histoire jusqu’au bout, je tiendrais jusqu’à la mort si tel est le prix à payer pour accomplir mon devoir de narrateur !/P On continue./C\n"\
+"/SCette réplique cinglante mit Inori dans un état de rage incontrôlable./P Enflant de puissance, il se mit à métamorphoser brusquement en une chimère rouge sang. Débordant de violence, il asséna une puissante claque à l’hôte d’accueil./P Une claque monumentale, mémorable, sans précédent, qui projeta instantanément l’hôte à terre, balançant une onde de choc qui fit vibrer le sol, pour ensuite faire léviter les morceaux du carrelage./P Cette claque faisait passer le modulateur pour un jouet de pacotille, tandis que les potentiels clients fuyaient la salle./C\n"\
+"La puissance d’Inori grandissait au fil des secondes,/P sa forme fantomatique devenait de plus en plus imposante./P Le plafond se mit à craquer, le corps inerte de l’hôte lévita, le comptoir se fendit en deux, le modulateur explosa…/P\n\n"\
+"Les débris orbitaient autour d’Inori tels des guêpes en colère./P Après un sinistre craquement de plafond, le bâtiment s’effondra./P Puis, plus rien./C\n"\
+"/NHmm…/P Vois-tu, c’est gênant, j’ai plus de bouquin./P Il a juste disparu./P Un peu comme le chocolat dans ma tasse d’ailleurs./P Y aurait-il un lien entre le livre et le chocolat ?/P Non, ça peut pas être ça./P Quoi qu’il en soit, je vais partir chercher une solution./P Tu sais quoi faire en attendant."
+#define STORY_TEXT_5 "C'est fini lol"
 
-static const char* storyTexts[] = {STORY_TEXT_1, STORY_TEXT_2, STORY_TEXT_3, STORY_TEXT_4};
-static const BoardSizePreset storyPresets[] = {BSP_MEDIUM, BSP_MEDIUM, BSP_SMALL};
+static const char* storyTexts[] = {STORY_TEXT_1, STORY_TEXT_2, STORY_TEXT_3, STORY_TEXT_4, STORY_TEXT_5};
+static const BoardSizePreset storyPresets[] = {BSP_MEDIUM, BSP_MEDIUM, BSP_SMALL, BSP_MEDIUM};
 
 #endif //PROJET_PASTEQUE_STORY_SCENE_TEXT_H
