@@ -30,3 +30,9 @@ bool hsNew(const char* filename, const player* newPlayer);
  // outNumPlayers will contain the number of players in the array
  // Returns true when the file has been parsed successfully.
 bool hsParse(const char* filename, player* players, int* outNumPlayers);
+
+// Returns the rank where a player would be with their score,
+// depending on their board (symbol and preset). If the leaderboard is
+// empty, returns 1 (the first place).
+// Also returns 1 on error.
+int hsRank(const char* filename, int score, char symbols, int preset);

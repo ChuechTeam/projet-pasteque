@@ -60,6 +60,7 @@ struct CrushData_S {
         TextInput nameInput;
         ToggleOption confirmButton;
         ToggleOption skipButton;
+        int rank;
     } highScoreUI;
     Panel* highScorePanel;
 
@@ -194,14 +195,8 @@ void drawComboPanel(Panel* panel, PastequeGameState* gameState, void* panelData)
 // ----------
 
 void moveCursorDelta(CrushBoard* board, Point* cursor, int deltaX, int deltaY) {
-    cursor->x += deltaX;
-    cursor->y += deltaY;
-
-    if (cursor->x < 0) { cursor->x = 0; }
-    if (cursor->x >= board->width) { cursor->x = board->width - 1; }
-
-    if (cursor->y < 0) { cursor->y = 0; }
-    if (cursor->y >= board->height) { cursor->y = board->height - 1; }
+    cursor->x = loopBackX(board, cursor->x + deltaX);
+    cursor->y = loopBackY(board, cursor->y + deltaY);
 }
 
 void toggleCursorSwapping(CrushData* data) {
@@ -459,24 +454,56 @@ void togglePause(CrushData* data) {
 // HIGHSCORE UI
 // ----------
 
+ColorId rankColor(int rank) {
+    switch (rank) {
+        case 1: return PASTEQUE_COLOR_GOLD_BG;
+        case 2: return PASTEQUE_COLOR_SILVER_BG;
+        case 3: return PASTEQUE_COLOR_BRONZE_BG;
+        default: return PASTEQUE_COLOR_DARK_PURPLE_BG;
+    }
+}
+
 void drawHighscoreUI(Panel* panel, PastequeGameState* gameState, void* panelData) {
     CrushData* data = panelData;
     HighScoreDialog* ui = &data->highScoreUI;
 
-    for (int i = 0; i < panel->width; ++i) {
+    for (int i = 0; i < panel->height; ++i) {
         ColorId color = i < 3 ? PASTEQUE_COLOR_BLACK : PASTEQUE_COLOR_WHITE;
         panelDrawLine(panel, 0, i, panel->width, ' ', color);
     }
     panelDrawTextCentered(panel, -1, 1, "Entrez dans la légende !", PASTEQUE_COLOR_BLACK);
 
-    panelDrawTextCentered(panel, -1, 4, "Entrez votre nom pour faire", PASTEQUE_COLOR_WHITE);
-    panelDrawTextCentered(panel, -1, 5, "partie du classement !", PASTEQUE_COLOR_WHITE);
+    ColorId rankCol = rankColor(ui->rank);
+    // Draw the background of the banner
+    for (int i = 4; i <= 6; ++i) {
+        panelDrawLine(panel, 0, i, panel->width, ' ', rankCol);
+    }
 
-    panelDrawText(panel, 2, 7, "Nom :", PASTEQUE_COLOR_WHITE);
-    uiDrawTextInput(panel, &ui->state, &ui->nameInput, 8, 7, 19, 19, 0, textInputStyleDefault);
+    char rankStr[32];
+    if (ui->rank == 1) {
+        snprintf(rankStr, 32, "Vous êtes 1er !");
+    } else {
+        snprintf(rankStr, 32, "Vous êtes %de !", ui->rank);
+    }
 
-    uiDrawToggleOption(panel, &ui->state, &ui->confirmButton, 2, 9, 12, "Confirmer", 1, toggleStyleButton);
-    uiDrawToggleOption(panel, &ui->state, &ui->skipButton, 15, 9, 12, "Passer", 2, toggleStyleButton);
+    panelDrawTextCentered(panel, -1, 5, rankStr, rankCol);
+
+    if (ui->rank > LEADERBOARD_MAX) {
+        panelDrawTextCentered(panel, -1, 8, "Votre score est trop bas", PASTEQUE_COLOR_WHITE);
+        panelDrawTextCentered(panel, -1, 9, "pour figurer dans le", PASTEQUE_COLOR_WHITE);
+        panelDrawTextCentered(panel, -1, 10, "classement.", PASTEQUE_COLOR_WHITE);
+        panelDrawTextCentered(panel, -1, 11, "Retentez votre chance !", PASTEQUE_COLOR_WHITE);
+        uiDrawToggleOption(panel, &ui->state, &ui->skipButton, 1, 13, 27, "OK", 0, toggleStyleButton);
+    } else {
+        panelDrawTextCentered(panel, -1, 8, "Entrez votre nom pour faire", PASTEQUE_COLOR_WHITE);
+        panelDrawTextCentered(panel, -1, 9, "partie du classement !", PASTEQUE_COLOR_WHITE);
+
+        panelDrawText(panel, 2, 11, "Nom :", PASTEQUE_COLOR_WHITE);
+        uiDrawTextInput(panel, &ui->state, &ui->nameInput, 8, 11, 19, 19, 0, textInputStyleDefault);
+
+        uiDrawToggleOption(panel, &ui->state, &ui->confirmButton, 2, 13, 12, "Confirmer", 1, toggleStyleButton);
+        uiDrawToggleOption(panel, &ui->state, &ui->skipButton, 15, 13, 12, "Passer", 2, toggleStyleButton);
+    }
 }
 
 void toggleHighScoreUI(CrushData* data) {
@@ -484,6 +511,9 @@ void toggleHighScoreUI(CrushData* data) {
         data->highScoreUI.state.focused = false;
         data->highScorePanel->visible = false;
     } else {
+        // Update the rank.
+        data->highScoreUI.rank = hsRank("highscore.pasteque",
+                                        data->board->score, data->board->symbols, data->board->sizePreset);
         data->highScoreUI.state.focused = true;
         data->highScorePanel->visible = true;
     }
@@ -543,7 +573,7 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
     panelCenterScreen(data->pausePanel, true, true);
     gsMovePanelLayer(gameState, data->pausePanel, 1);
 
-    data->highScorePanel = gsAddPanel(gameState, 0, 0, 29, 11, boardAdorn, &drawHighscoreUI, data);
+    data->highScorePanel = gsAddPanel(gameState, 0, 0, 29, 15, boardAdorn, &drawHighscoreUI, data);
     data->highScorePanel->adornment.colorPairOverrideV = PASTEQUE_COLOR_WHITE_ON_WHITE;
     data->highScorePanel->adornment.colorPairOverrideEndY = 2;
     data->highScorePanel->visible = false;
@@ -654,11 +684,18 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
             return;
         }
 
-        UINavBlock blocks[] = {
-                {0, 0, ND_VERTICAL},
-                {1, 2, ND_HORIZONTAL}
-        };
-        uiKeyboardNav(&hsUI->state, pEvent, blocks, 2);
+        if (hsUI->rank > LEADERBOARD_MAX) {
+            // We only have one button: OK (as skipButton)
+            UINavBlock blocks[] = {{0, 0, ND_VERTICAL}};
+            uiKeyboardNav(&hsUI->state, pEvent, blocks, 1);
+        } else {
+            // Normal UI.
+            UINavBlock blocks[] = {
+                    {0, 0, ND_VERTICAL},
+                    {1, 2, ND_HORIZONTAL}
+            };
+            uiKeyboardNav(&hsUI->state, pEvent, blocks, 2);
+        }
     } else {
         if (data->playState == CPS_WAITING_INPUT) {
             if (isZQSD && code == KEY_Z || isArrows && code == KEY_UP) {

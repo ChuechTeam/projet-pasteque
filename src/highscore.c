@@ -136,3 +136,29 @@ bool hsParse(const char* filename, player* players, int* outNumPlayers) {
     *outNumPlayers = count;
     return true;
 }
+
+int hsRank(const char* filename, int score, char symbols, int preset) {
+    player players[MAX_PLAYERS];
+    int numPlayers;
+    if (!hsParse(filename, players, &numPlayers)) {
+        // Most likely, the file doesn't exist.
+        return 1;
+    }
+
+    // Go through all the scores in the leaderboard (they are sorted from greatest to lowest),
+    // increase the rank until we see a lower or equal score.
+    int rank = 1;
+
+    for (int i = 0; i < numPlayers; ++i) {
+        player* pl = &players[i];
+        if (pl->preset == preset && pl->symbols == symbols) {
+            if (pl->score > score) {
+                rank++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    return rank;
+}

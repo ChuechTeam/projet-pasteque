@@ -238,7 +238,7 @@ int basePoints(int length) {
         case 10:
             return 10000;
         default:
-            return 20000 * length;
+            return 2500 * length;
     }
 }
 
