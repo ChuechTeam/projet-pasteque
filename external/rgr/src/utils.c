@@ -164,7 +164,7 @@ void drawText(Screen* pScr, int x, int y, char* pText, int clrId){
         attron(COLOR_PAIR(clrId));
         // limit the size of the string in order to avoid printing outside the edges
         int sz  = pScr->width - x;
-        int len = strlen(pText);
+        int len = (int)strlen(pText);
         if(sz > len+1){
             sz = len;
         }

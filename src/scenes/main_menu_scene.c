@@ -287,7 +287,7 @@ void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData
         panelDrawText(panel, 0, 8 + i, pl->name, PASTEQUE_COLOR_WHITE);
         char scoreStr[16];
         snprintf(scoreStr, 16, "%d", pl->score);
-        panelDrawText(panel, panel->width - strlen(scoreStr), 8 + i, scoreStr, PASTEQUE_COLOR_WHITE);
+        panelDrawText(panel, panel->width - (int)strlen(scoreStr), 8 + i, scoreStr, PASTEQUE_COLOR_WHITE);
     }
 
     uiDrawToggleOption(panel, &ui->state, &ui->backButton, 1, 21, panel->width - 2,
