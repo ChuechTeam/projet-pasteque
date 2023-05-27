@@ -472,7 +472,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             // Make sure the file exists.
             if (access("savefile.pasteque", F_OK) == 0) {
                 if (boardReadFromFile("savefile.pasteque", &board, errMsg)) {
-                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL, -1));
+                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
                     return;
                 } else {
                     uiDisplayNotification(&data->notificationData, errMsg, PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
@@ -534,7 +534,7 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         if (uiHandleToggleOptionEvent(&playUI->state, &playUI->playButton, pEvent)) {
             PlaySettings params = data->playSettings;
             CrushBoard* board = makeCrushBoard(params.sizePreset, params.width, params.height, params.symbols);
-            gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL, -1));
+            gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
             return;
         }
 

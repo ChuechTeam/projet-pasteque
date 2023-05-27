@@ -36,6 +36,7 @@ CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, ch
     board->cellCount = cellCount;
     board->score = 0;
     board->combo = 0;
+    board->storyIndex = -1;
     // data->cells has already been initialized since we've allocated enough space using malloc.
 
     // Fill with random values
@@ -766,6 +767,7 @@ bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]
     success &= fprintf(file, "symbols=%hhd\n", board->symbols) != EOF;
     success &= fprintf(file, "score=%d\n", board->score) != EOF;
     success &= fprintf(file, "playtime=%ld\n", board->playTime) != EOF;
+    success &= fprintf(file, "story=%d\n", board->storyIndex) != EOF;
     success &= fprintf(file, "cells:\n") != EOF;
     for (int y = 0; y < board->height; ++y) {
         for (int x = 0; x < board->width; ++x) {
@@ -811,6 +813,7 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
     char symbols = 0;
     BoardSizePreset preset = -1;
     long playTime = -1;
+    int story = -1;
     bool error = false;
     bool fileError = false;
     bool parseCells = false;
@@ -831,6 +834,8 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
         } else if (preset == -1 && sscanf(line, "preset=%d", (int*) &preset)) {
             // Parsed
         } else if (playTime == -1 && sscanf(line, "playtime=%ld", &playTime)) {
+            // Parsed
+        } else if (story == -1 && sscanf(line, "story=%d", &story)) {
             // Parsed
         } else if (strcmp(line, "cells:\n") == 0) {
             parseCells = true;
@@ -883,6 +888,7 @@ bool boardReadFromFile(const char* path, CrushBoard** outBoard, char* errorMessa
             createdBoard->symbols = symbols;
             createdBoard->score = score;
             createdBoard->cellCount = cellCount;
+            createdBoard->storyIndex = story;
         }
     }
 

@@ -43,7 +43,6 @@ struct CrushData_S {
     CrushInputMethod inputMethod;
 
     // STORY
-    int storyIndex;
     bool storyModeActivated;
     // When true, will skip the game and show the next chapter
     // after a period of time.
@@ -87,7 +86,7 @@ void toggleHighScoreUI(CrushData* data);
 // (Create a game, Symbol char, UI switch)
 // ----------
 
-CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod, int storyIndex) {
+CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod) {
     CrushData* data = calloc(1, sizeof(CrushData));
     if (data == NULL) {
         RAGE_QUIT(2001, "Failed to allocate CrushData.");
@@ -96,8 +95,7 @@ CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod, int st
     // This will validate width, height, and the symbols.
     data->board = board;
     data->inputMethod = inputMethod;
-    data->storyIndex = storyIndex;
-    data->storyModeActivated = storyIndex >= 0;
+    data->storyModeActivated = data->board->storyIndex >= 0;
     return data;
 }
 
@@ -561,7 +559,7 @@ void submitHighScore(CrushData* data) {
 // ----------
 
 void nextStory(CrushData* data, PastequeGameState* gameState) {
-    gsSwitchScene(gameState, SN_STORY, makeStoryData(data->storyIndex + 1));
+    gsSwitchScene(gameState, SN_STORY, makeStoryData(data->board->storyIndex + 1));
 }
 
 void crushStoryAutoSkip(CrushData* data, long micros) {
@@ -698,7 +696,7 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
                     // Play again
                     CrushBoard* orig = data->board;
                     CrushBoard* board = makeCrushBoard(orig->sizePreset, orig->width, orig->height, orig->symbols);
-                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, data->inputMethod, -1));
+                    gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, data->inputMethod));
                 }
                 return;
             } else {

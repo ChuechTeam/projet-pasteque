@@ -43,6 +43,7 @@ typedef struct {
     int score;
     int combo;
     long playTime;
+    int storyIndex;
     // The list of all tricks in the combo, stuff like "Linear smash", etc.
     char comboTricks[MAX_TRICKS][MAX_TRICK_LENGTH];
     // A malloc-allocated array of all the cells stored in a contiguous way.

@@ -25,7 +25,7 @@ typedef struct CrushData_S CrushData;
 
 // TODO: Multiple players?
 // -1 to storyIndex disables the story
-CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod, int storyIndex);
+CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod);
 
 // Shows the next chapter automatically, after a given period of time.
 void crushStoryAutoSkip(CrushData* data, long micros);

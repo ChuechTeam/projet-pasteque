@@ -50,8 +50,12 @@ struct StoryData_S {
 const int stories = 12;
 
 StoryData* makeStoryData(int storyIndex) {
-    if (storyIndex < 0 || storyIndex >= stories) {
+    if (storyIndex < 0) {
         RAGE_QUIT(80000, "Story index out of bounds (%d)", storyIndex);
+    }
+    if (storyIndex >= stories) {
+        // A very high number will lead to the last story.
+        storyIndex = stories - 1;
     }
     StoryData* data = calloc(1, sizeof(StoryData));
     if (data == NULL) {
@@ -217,7 +221,9 @@ void continueText(StoryData* data, PastequeGameState* gameState) {
             } else {
                 // Switch to a game, woo!
                 CrushBoard* board = makeCrushBoard(storyPresets[data->index], 0, 0, 4);
-                CrushData* scene = makeCrushData(board, CIM_ALL, data->index);
+                board->storyIndex = data->index;
+
+                CrushData* scene = makeCrushData(board, CIM_ALL);
                 if (data->index == 4) {
                     // Special prank for Chapter 5
                     crushStoryAutoSkip(scene, MICROS(6000));

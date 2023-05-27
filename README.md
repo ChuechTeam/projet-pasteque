@@ -44,10 +44,18 @@ de manière très lisible dans le fichier `highscores.pasteque`.
 ### Sauvegarde
 Il est possible de sauvegarder une partie en cours depuis le menu pause 
 (appuyez sur P) ou en appuyant sur N. La partie sauvegardée peut être reprise
-avec le bouton "Reprendre" dans le menu principal.
+avec le bouton "Reprendre" dans le menu principal. Votre progression dans 
+le mode histoire sera aussi sauvegardée.
 
 Une seule partie peut être sauvegardée à la fois, contenue dans le fichier
 `savefile.pasteque`.
+
+### Mode histoire
+Projet Pasteque contient aussi un mode histoire avec 11 chapitres ! Découvrez
+l'aventure d'Inori dans sa quête de remboursement de dette.
+
+Le rapport avec un jeu de Match-3 ? Aucun. Quasiment. Vous verrez bien par
+vous-même...
 
 ### Contrôles
 * Menu principal
@@ -58,6 +66,7 @@ Une seule partie peut être sauvegardée à la fois, contenue dans le fichier
   * Échanger deux cases : Entrée, Espace, deux clics gauches/droits, clic glissé
   * Menu pause : P
   * Sauvegarder : N
+* Fermer le jeu : Échap
 
 Certains terminaux ne fonctionnent pas avec la souris. Le jeu reste intégralement
 jouable sans.
