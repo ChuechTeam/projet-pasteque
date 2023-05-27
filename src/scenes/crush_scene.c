@@ -161,7 +161,7 @@ void drawScorePanel(Panel* panel, PastequeGameState* gameState, void* panelData)
     char buffer[64];
     sprintf(buffer, "Score : %d", data->board->score);
 
-    panelDrawText(panel, 0, 0, buffer, PASTEQUE_COLOR_BLUE);
+    panelDrawText(panel, 0, 0, buffer, PASTEQUE_COLOR_YELLOW);
 }
 
 void drawGameOverPanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
