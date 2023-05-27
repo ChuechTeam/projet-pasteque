@@ -6,10 +6,11 @@
 #include "scenes/main_menu_scene.h"
 #include <malloc.h>
 #include <string.h>
+#include <ctype.h>
 
-#define TEXT_SIZE 4096
-#define MAX_MARKUPS 32
-#define CHARACTER_PERIOD MICROS(32)
+#define TEXT_SIZE 6000
+#define MAX_MARKUPS 100
+#define CHARACTER_PERIOD MICROS(36)
 #define PAUSE_DURATION MICROS(300)
 
 typedef enum {
@@ -46,7 +47,7 @@ struct StoryData_S {
     Panel* continuePanel;
 };
 
-const int stories = 5;
+const int stories = 12;
 
 StoryData* makeStoryData(int storyIndex) {
     if (storyIndex < 0 || storyIndex >= stories) {
@@ -78,11 +79,9 @@ void initText(StoryData* data) {
     data->rawText = storyTexts[data->index];
 
     // Strip all formatting tags from the text-wrapped text.
-    // This has the issue of not exactly respecting the text width,
-    // as markup sequences are taken in account inside the wrapped text.
-    // But it's 2 chars max per sequence, so it's fine.
+    // Also ignores markups while wrapping
     char wrapped[TEXT_SIZE];
-    panelWrapText(data->rawText, data->textPanel->width, wrapped, TEXT_SIZE);
+    panelWrapText(data->rawText, data->textPanel->width, true, wrapped, TEXT_SIZE);
     int iSto = 0;
     int iMark = 0;
     int iWrap = 0;
@@ -187,17 +186,25 @@ void tickText(StoryData* data, unsigned long deltaTime) {
         }
 
         if (data->markups[data->curMarkupIndex].index == data->storyCursor) {
+            if (data->curMarkupIndex >= MAX_MARKUPS) {
+                RAGE_QUIT(81000, "Too much markups!");
+            }
             applyMarkup(data, data->markups[data->curMarkupIndex].kind);
             data->curMarkupIndex++;
         }
 
+        // Skip newlines at the beginning of the text.
+        bool skipChar = data->displayedCursor == 0 && isspace(data->storyText[data->storyCursor]);
+
         int utfLen = getUTF8Length(data->storyText[data->storyCursor]);
-        for (int j = 0; j < utfLen; ++j) {
-            data->displayedText[data->displayedCursor + j] = data->storyText[data->storyCursor + j];
+        if (!skipChar) {
+            for (int j = 0; j < utfLen; ++j) {
+                data->displayedText[data->displayedCursor + j] = data->storyText[data->storyCursor + j];
+            }
+            data->displayedCursor += utfLen;
+            data->displayedText[data->displayedCursor] = '\0';
         }
         data->storyCursor += utfLen;
-        data->displayedCursor += utfLen;
-        data->displayedText[data->displayedCursor] = '\0';
     }
 }
 
@@ -210,7 +217,17 @@ void continueText(StoryData* data, PastequeGameState* gameState) {
             } else {
                 // Switch to a game, woo!
                 CrushBoard* board = makeCrushBoard(storyPresets[data->index], 0, 0, 4);
-                gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL, data->index));
+                CrushData* scene = makeCrushData(board, CIM_ALL, data->index);
+                if (data->index == 4) {
+                    // Special prank for Chapter 5
+                    crushStoryAutoSkip(scene, MICROS(6000));
+                }
+                if (data->index == 7) {
+                    // Chapter 8: Time travel machine (25s)
+                    crushStoryAutoSkip(scene, MICROS(25000));
+                }
+
+                gsSwitchScene(gameState, SN_CRUSH, scene);
             }
         } else {
             memset(data->displayedText, 0, sizeof(char) * TEXT_SIZE);
@@ -221,7 +238,7 @@ void continueText(StoryData* data, PastequeGameState* gameState) {
 }
 
 void storyInit(PastequeGameState* gameState, StoryData* data) {
-    data->textPanel = gsAddPanel(gameState, 0, 0, 90, 12, noneAdornment, &drawTextPanel, data);
+    data->textPanel = gsAddPanel(gameState, 0, 0, 90, 15, noneAdornment, &drawTextPanel, data);
     data->continuePanel = gsAddPanel(gameState, 0, 0, 90, 1, noneAdornment, &drawContinuePanel, data);
 
     initText(data);

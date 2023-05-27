@@ -162,10 +162,11 @@ void panelDrawTextCentered(Panel* pPanel, int x, int y, char* pText, int clrId);
  * Wraps the given text, limited to a certain width, to a given buffer.
  * @param pText the text to wrap
  * @param width the max width of the lines
+ * @param hasStoryMarkups whether or not the text contains story markups (/X chars)
  * @param outWrappedText the buffer containing the wrapped text
  * @param wrappedTextSize the size of the buffer
  */
-void panelWrapText(const char* pText, int width, char outWrappedText[], int wrappedTextSize);
+void panelWrapText(const char* pText, int width, bool hasStoryMarkups, char outWrappedText[], int wrappedTextSize);
 
 /**
  * Moves a panel to the given coordinates.
