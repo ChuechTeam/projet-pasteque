@@ -266,6 +266,7 @@ void addLineScore(CrushBoard* board, int length) {
             "Aligned",
             "Phenomenal",
             "Top-Notch",
+            "Outstanding",
             "Chaotic",
             "360°",
             "Cataclysmic",
@@ -276,7 +277,7 @@ void addLineScore(CrushBoard* board, int length) {
             "Mathematically Correct",
             "WTF?!"
     };
-    static const int adjectivesNum = 15;
+    static const int adjectivesNum = 16;
     static const char* nouns1[] = {
             "Line",
             "Sequence",
