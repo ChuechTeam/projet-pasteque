@@ -16,10 +16,6 @@ void storyUpdate(PastequeGameState* gameState, StoryData* data, unsigned long de
 
 void storyEvent(PastequeGameState* gameState, StoryData* data, Event* pEvent);
 
-void storyDrawBackground(PastequeGameState* gameState, StoryData* data, Screen* pScreen);
-
-void storyDrawForeground(PastequeGameState* gameState, StoryData* data, Screen* pScreen);
-
 void storyFinish(PastequeGameState* gameState, StoryData* data);
 
 #endif //PROJET_PASTEQUE_STORY_SCENE_H

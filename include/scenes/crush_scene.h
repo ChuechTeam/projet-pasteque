@@ -36,10 +36,6 @@ void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long de
 
 void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent);
 
-void crushDrawBackground(PastequeGameState* gameState, CrushData* data, Screen* pScreen);
-
-void crushDrawForeground(PastequeGameState* gameState, CrushData* data, Screen* pScreen);
-
 void crushFinish(PastequeGameState* gameState, CrushData* data);
 
 #endif //PROJET_PASTEQUE_CRUSH_SCENE_H

@@ -10,7 +10,7 @@
 
 #define STORY_TEXT_1 \
 "/STout commence dans une ville banale, déserte, entourée de nombreux bâtiments rectangulaires, hexagonaux, polygonaux, aux bords tranchants comme des rasoirs./P C’est d’ailleurs le sujet d’une publicité éblouissante affichée sur un écran accroché à un des bâtiments ; la seule source de lumière dans cette sombre nuit de nouvelle lune./P\n\n"\
-"Cet étrange paysage sera bientôt le quotidien d'Inori./P Auparavant, il travaillait dans une petite entreprise de télé-restaurant, mais la société a dû renvoyer 5% de ses 20 employés pour des raisons financières./P Une stratégie bien rusée pour ne pas payer les frais de démission./C\n"\
+"Cet étrange paysage sera bientôt le quotidien d'Inori./P Auparavant, il travaillait dans une petite entreprise de télé-restaurant, mais la société a dû renvoyer 5% de ses 20 employés pour des raisons financières./P Une stratégie bien rusée pour ne pas payer les frais de licenciement./C\n"\
 "Endetté de 1505€, la situation est plus qu’urgente pour Inori./P Son périple commence devant l’entrée d’un bâtiment d’un gris uniforme, rectangulaire mais parsemé de creux autour des bords, à l’image d’une brique de lait vide regonflée d’air./P Inori franchit la porte d’entrée, et là, c’est le choc…/C\n"\
 "/N…Et là QUOI ?/P Quel choc ?/P Y’a pas la suite ?!/P Attends, elle doit bien être quelque part…/P Non, j’ai bien regardé le sommaire et il n’y a qu’une page./P C'est pas possible…/P L'histoire n'a pas pu se volatiliser comme ça…/P Bon, tu sais quoi, j’ai trouvé ce jeu dans un vide-greniers, ça devrait t’occuper pendant que je cherche la suite./P Perso, ce jeu m’a fait péter une vitre, tellement que j’ai dû payer 655€ de réparations./P Depuis, j’y touche plus, mais toi, tu peux y arriver."
 

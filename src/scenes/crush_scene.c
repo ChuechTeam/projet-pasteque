@@ -701,8 +701,8 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
         UINavBlock blocks[] = {{0, 2, ND_VERTICAL}};
         uiKeyboardNav(&pauseUI->state, pEvent, blocks, 1);
 
-        if (pEvent->code == KEY_S && data->storyModeActivated) {
-            // Temporary cheat: go to next story
+        if (pEvent->code == KEY_S && data->storyModeActivated && gameState->enableCheats) {
+            // Cheat: go to next story
             nextStory(data, gameState);
             return;
         }
@@ -790,13 +790,6 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
             saveGame(data);
         }
     }
-}
-
-void crushDrawBackground(PastequeGameState* gameState, CrushData* data, Screen* pScreen) {
-}
-
-void crushDrawForeground(PastequeGameState* gameState, CrushData* data, Screen* pScreen) {
-
 }
 
 void crushFinish(PastequeGameState* gameState, CrushData* data) {

@@ -45,7 +45,9 @@ int update(void* pUserData, Screen* pScreen, unsigned long deltaTime) {
     PastequeGameState* gs = pUserData;
 
     gs->gameTime += deltaTime;
-    colorsUpdateDynamic(gs->gameTime);
+    if (gs->enableDynamicColors) {
+        colorsUpdateDynamic(gs->gameTime);
+    }
 
     if (gs->quitRequested) {
         return 1; // Stop!
@@ -61,9 +63,7 @@ void draw(void* pUserData, Screen* pScreen) {
     PastequeGameState* gs = pUserData;
 
     erase();
-    sceneDrawBackground(gs->currentScene, gs->currentSceneData, gs);
     gsDrawAllPanels(gs);
-    sceneDrawForeground(gs->currentScene, gs->currentSceneData, gs);
 }
 
 // Called just before the game ends.

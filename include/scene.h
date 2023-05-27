@@ -68,29 +68,6 @@ void sceneUpdate(SceneName sceneName, void* sceneData,
                  struct PastequeGameState_S* gameState, unsigned long deltaSeconds);
 
 /**
- * Calls the sceneDrawBackground function for the current scene.
- *
- * The sceneDrawBackground function is called before drawing all panels.
- * It can be useful for drawing a background (surprising!).
- * @param sceneName the name of the scene to initialize
- * @param sceneData the data associated with the scene
- * @param gameState the game state
- */
-void sceneDrawBackground(SceneName sceneName, void* sceneData, struct PastequeGameState_S* gameState);
-
-/**
- * Calls the sceneDrawForeground function for the current scene.
- *
- * The sceneDrawForeground function is called after drawing all panels.
- * It can be used to add some visual effects on top of drawn panels, or drawing debug messages.
- * Honestly, I don't know why I created that function exactly but maybe that it will be useful one day.
- * @param sceneName the name of the scene to initialize
- * @param sceneData the data associated with the scene
- * @param gameState the game state
- */
-void sceneDrawForeground(SceneName sceneName, void* sceneData, struct PastequeGameState_S* gameState);
-
-/**
  * Calls the sceneFinish function for the current scene.
  *
  * The sceneFinish function is called just before switching to another scene, or before quitting the game.

@@ -34,26 +34,6 @@ void sceneUpdate(SceneName sceneName, void* sceneData,
     }
 }
 
-void sceneDrawBackground(SceneName sceneName, void* sceneData, struct PastequeGameState_S* gameState) {
-    if (sceneName == SN_MAIN_MENU) {
-        mainMenuDrawBackground(gameState, sceneData, gameState->screen);
-    } else if (sceneName == SN_CRUSH) {
-        crushDrawBackground(gameState, sceneData, gameState->screen);
-    } else if (sceneName == SN_STORY) {
-        storyDrawBackground(gameState, sceneData, gameState->screen);
-    }
-}
-
-void sceneDrawForeground(SceneName sceneName, void* sceneData, struct PastequeGameState_S* gameState) {
-    if (sceneName == SN_MAIN_MENU) {
-        mainMenuDrawForeground(gameState, sceneData, gameState->screen);
-    } else if (sceneName == SN_CRUSH) {
-        crushDrawForeground(gameState, sceneData, gameState->screen);
-    } else if (sceneName == SN_STORY) {
-        storyDrawForeground(gameState, sceneData, gameState->screen);
-    }
-}
-
 void sceneFinish(SceneName sceneName, void* sceneData, struct PastequeGameState_S* gameState) {
     if (sceneName == SN_MAIN_MENU) {
         mainMenuFinish(gameState, sceneData);

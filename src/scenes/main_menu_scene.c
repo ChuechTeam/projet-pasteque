@@ -543,10 +543,10 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
         }
     } else if (hsUI->state.focused) {
         if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->symbolsOption, pEvent)) {
-            // Nothing to do
+            moveHighscoreFilter(data, 1);
             return;
         } else if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->presetOption, pEvent)) {
-            // Nothing!
+            moveHighscoreFilter(data, 1);
             return;
         }
         if (uiHandleToggleOptionEvent(&hsUI->state, &hsUI->backButton, pEvent)) {
@@ -568,12 +568,6 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             }
         }
     }
-}
-
-void mainMenuDrawBackground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen) {
-}
-
-void mainMenuDrawForeground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen) {
 }
 
 void mainMenuFinish(PastequeGameState* gameState, MainMenuData* data) {

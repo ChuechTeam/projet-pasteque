@@ -18,10 +18,6 @@ void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned l
 
 void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEvent);
 
-void mainMenuDrawBackground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen);
-
-void mainMenuDrawForeground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen);
-
 void mainMenuFinish(PastequeGameState* gameState, MainMenuData* data);
 
 #endif //PROJET_PASTEQUE_MAIN_MENU_SCENE_H

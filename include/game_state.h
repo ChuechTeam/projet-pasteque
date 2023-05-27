@@ -33,6 +33,11 @@ typedef struct PastequeGameState_S {
     // The amount of microseconds elapsed since the beginning of the game.
     unsigned long gameTime;
 
+    // True if dynamic colors are activated, else fallback to static colors.
+    bool enableDynamicColors;
+    // True if cheats are enabled (story mode skip, currently)
+    bool enableCheats;
+
     // The array containing all panels. By default, they are zeroed-out so they don't render.
     Panel panels[MAX_PANELS];
     // Contains pointers to the panels array, but sorted by the panel layer

@@ -10,8 +10,6 @@
 #include "libGameRGR2.h"
 #include <stdbool.h>
 
-#define ADORN_COLOR_OVERRIDE_MAX 128
-
 /**
  * A character style for adorning panels.
  */

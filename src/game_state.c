@@ -4,6 +4,7 @@
 #include "colors.h"
 #include "game_state.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
 // This internal function sorts the panelSorted array using insert sort.
 // Insert sort is the perfect match for this scenario, as panels are very rarely
@@ -93,6 +94,22 @@ PastequeGameState* makeGameState() {
 
 void initGameState(PastequeGameState* pGameState, Screen* pScreen) {
     pGameState->screen = pScreen;
+
+    // Turn dynamic colors off if wanted.
+    char* dynEnv = getenv("PASTEQUE_NO_DYN_COLORS");
+    if (dynEnv != NULL && strcmp(dynEnv, "1") == 0) {
+        pGameState->enableDynamicColors = false;
+    } else {
+        pGameState->enableDynamicColors = true;
+    }
+
+    // Enable cheats if wanted.
+    char* cheatEnv = getenv("PASTEQUE_CHEAT");
+    if (cheatEnv != NULL && strcmp(cheatEnv, "1") == 0) {
+        pGameState->enableCheats = true;
+    } else {
+        pGameState->enableCheats = false;
+    }
 }
 
 void gsSwitchScene(PastequeGameState* pGameState, SceneName newScene, void* newSceneData) {

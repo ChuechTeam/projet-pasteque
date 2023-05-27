@@ -57,6 +57,7 @@ typedef int ColorId;
  */
 void initColors();
 
+// Updates dynamic colors, which currently are: PASTEQUE_COLOR_WATERMELON_DYN
 void colorsUpdateDynamic(unsigned long gameTime);
 
 #endif //PROJET_PASTEQUE_COLORS_H

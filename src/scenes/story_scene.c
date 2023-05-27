@@ -263,16 +263,12 @@ void storyEvent(PastequeGameState* gameState, StoryData* data, Event* pEvent) {
         continueText(data, gameState);
     }
 
-    if (pEvent->code == KEY_S) {
-        // Temporary cheat: skip story
+    if (pEvent->code == KEY_S && gameState->enableCheats) {
+        // Cheat: skip story
         data->waitUserContinue = true;
         data->storyEnded = true;
         continueText(data, gameState);
     }
 }
-
-void storyDrawBackground(PastequeGameState* gameState, StoryData* data, Screen* pScreen) {}
-
-void storyDrawForeground(PastequeGameState* gameState, StoryData* data, Screen* pScreen) {}
 
 void storyFinish(PastequeGameState* gameState, StoryData* data) {}
