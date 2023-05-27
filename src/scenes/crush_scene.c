@@ -465,10 +465,14 @@ void togglePause(CrushData* data) {
 
 ColorId rankColor(int rank) {
     switch (rank) {
-        case 1: return PASTEQUE_COLOR_GOLD_BG;
-        case 2: return PASTEQUE_COLOR_SILVER_BG;
-        case 3: return PASTEQUE_COLOR_BRONZE_BG;
-        default: return PASTEQUE_COLOR_DARK_PURPLE_BG;
+        case 1:
+            return PASTEQUE_COLOR_GOLD_BG;
+        case 2:
+            return PASTEQUE_COLOR_SILVER_BG;
+        case 3:
+            return PASTEQUE_COLOR_BRONZE_BG;
+        default:
+            return PASTEQUE_COLOR_DARK_PURPLE_BG;
     }
 }
 
@@ -543,7 +547,8 @@ void submitHighScore(CrushData* data) {
     hsPlayer.symbols = data->board->symbols;
     if (hsNew("highscore.pasteque", &hsPlayer)) {
         if (strcmp(name, "VOTRE NOM") == 0) {
-            uiDisplayNotification(&data->notificationData, "MDRRRRRRR", PASTEQUE_COLOR_WHITE_ON_DARK_GREEN, MICROS(5000));
+            uiDisplayNotification(&data->notificationData, "MDRRRRRRR", PASTEQUE_COLOR_WHITE_ON_DARK_GREEN,
+                                  MICROS(5000));
         }
         toggleHighScoreUI(data);
         togglePause(data);

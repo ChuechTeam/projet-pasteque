@@ -19,16 +19,16 @@ typedef struct {
     char name[MAX_NAME_LENGTH];
     int score;
     int preset;
-    char symbols; 
+    char symbols;
 } player;
 
 // Adds a new high score entry to the given file
 // Returns true when the file has been written successfully.
 bool hsNew(const char* filename, const player* newPlayer);
 
- //main function to read the file, rank the players and rewrite the file
- // outNumPlayers will contain the number of players in the array
- // Returns true when the file has been parsed successfully.
+// main function to read the file, rank the players and rewrite the file
+// outNumPlayers will contain the number of players in the array
+// Returns true when the file has been parsed successfully.
 bool hsParse(const char* filename, player* players, int* outNumPlayers);
 
 // Returns the rank where a player would be with their score,

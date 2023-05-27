@@ -155,7 +155,8 @@
 "Ahhh/P./P./P./P Qu’est-ce que j’aime écrire de la merde."
 
 static const char* storyTexts[] = {STORY_TEXT_1, STORY_TEXT_2, STORY_TEXT_3, STORY_TEXT_4, STORY_TEXT_5, STORY_TEXT_6,
-                                   STORY_TEXT_7, STORY_TEXT_8, STORY_TEXT_9, STORY_TEXT_10, STORY_TEXT_11, STORY_TEXT_12};
+                                   STORY_TEXT_7, STORY_TEXT_8, STORY_TEXT_9, STORY_TEXT_10, STORY_TEXT_11,
+                                   STORY_TEXT_12};
 static const BoardSizePreset storyPresets[] = {BSP_MEDIUM, BSP_MEDIUM, BSP_SMALL, BSP_MEDIUM, BSP_LARGE,
                                                BSP_MEDIUM, BSP_SMALL, BSP_MEDIUM, BSP_MEDIUM, BSP_LARGE, BSP_MEDIUM};
 

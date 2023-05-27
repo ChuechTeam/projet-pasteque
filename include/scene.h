@@ -10,6 +10,7 @@
  */
 #ifndef PROJET_PASTEQUE_SCENE_H
 #define PROJET_PASTEQUE_SCENE_H
+
 #include "libGameRGR2.h"
 
 /**

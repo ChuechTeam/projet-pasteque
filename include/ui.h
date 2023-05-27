@@ -120,7 +120,9 @@ void uiKeyboardNav(UIState* state, Event* event, UINavBlock blocks[], int nBlock
 // ----
 
 Panel* uiAddNotificationPanel(struct PastequeGameState_S* gameState, int maxWidth, NotificationPanelData* data);
+
 void uiDisplayNotification(NotificationPanelData* data, char* text, ColorId color, unsigned long duration);
+
 void uiUpdateNotificationPanel(NotificationPanelData* data, unsigned long deltaMicros);
 
 #endif //PROJET_PASTEQUE_UI_H

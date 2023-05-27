@@ -40,7 +40,7 @@ extern const PanelAdornment noneAdornment;
 
 struct Panel_S; // Forward declare Panel
 struct PastequeGameState_S; // Same for PastequeGameState
-typedef void(*DrawPanelFunction)(struct Panel_S* pPanel, struct PastequeGameState_S* pGameState, void* pPanelData);
+typedef void(* DrawPanelFunction)(struct Panel_S* pPanel, struct PastequeGameState_S* pGameState, void* pPanelData);
 
 /**
  * A rectangular region of the screen to draw on.
@@ -106,7 +106,7 @@ extern const Panel emptyPanel;
  * Use gsAddPanel to create a panel instead (game_state.h).
  */
 Panel constructPanel(int index, int x, int y, int width, int height,
-                PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData, Screen* pScreen);
+                     PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData, Screen* pScreen);
 
 /**
  * Returns true if a Panel is empty, meaning that it has a null drawFunc and won't

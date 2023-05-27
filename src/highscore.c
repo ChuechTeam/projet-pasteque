@@ -6,24 +6,24 @@
 #include <ctype.h>
 
 //You know how leaderboards work right ?
-void scores_sort(player *players, int count){
-    int etape,decal;
+void scores_sort(player* players, int count) {
+    int etape, decal;
     player temp;
-    for (etape = 1; etape< count; etape++){
+    for (etape = 1; etape < count; etape++) {
         temp = players[etape];
-        decal=etape-1;
-        while (decal>=0 && players[decal].score<temp.score){
-            players[decal+1]=players[decal];
+        decal = etape - 1;
+        while (decal >= 0 && players[decal].score < temp.score) {
+            players[decal + 1] = players[decal];
             decal--;
         }
-        players[decal+1]=temp;
+        players[decal + 1] = temp;
     }
 }
 
 // Rewrites the file with only the best scores for each category (see LEADERBOARD_MAX)
 // Can also change the size of the array by removing some of its elements.
 // Expects the players array to be sorted.
-void ajustscores(const char* filename, player* players, int* count){
+void ajustscores(const char* filename, player* players, int* count) {
     FILE* file = fopen(filename, "w");  // Open the file in write mode
     if (file == NULL) {
         // Then the file is likely readable, but write-protected.
@@ -75,8 +75,8 @@ bool hsNew(const char* filename, const player* newPlayer) {
     // Replace spaces with ~ (tilde).
     // Do some extra checks if the string is not null-terminated.
     char name[MAX_NAME_LENGTH];
-    strncpy(name, newPlayer->name, MAX_NAME_LENGTH-1);
-    name[MAX_NAME_LENGTH-1] = '\0';
+    strncpy(name, newPlayer->name, MAX_NAME_LENGTH - 1);
+    name[MAX_NAME_LENGTH - 1] = '\0';
     for (int i = 0; name[i] != '\0'; ++i) {
         if (isspace(name[i])) {
             name[i] = '~';
@@ -131,7 +131,7 @@ bool hsParse(const char* filename, player* players, int* outNumPlayers) {
     scores_sort(players, count); //sorts the players accordingly to their score
 
     fclose(file);
-    ajustscores(filename,players, &count);
+    ajustscores(filename, players, &count);
 
     *outNumPlayers = count;
     return true;

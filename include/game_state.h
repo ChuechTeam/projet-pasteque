@@ -6,13 +6,16 @@
  */
 #ifndef PROJET_PASTEQUE_GAME_STATE_H
 #define PROJET_PASTEQUE_GAME_STATE_H
+
 #include "panel.h"
 #include "scene.h"
 
 // Add the access function for Windows
 // From: https://stackoverflow.com/a/230068
 #ifdef WIN32
+
 #include <io.h>
+
 #define F_OK 0
 #define access _access
 #else
@@ -96,7 +99,7 @@ void initGameState(PastequeGameState* pGameState, Screen* pScreen);
  * @return the panel, owned by the game state
  */
 Panel* gsAddPanel(PastequeGameState* pGameState, int x, int y, int width, int height,
-               PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData);
+                  PanelAdornment adornment, DrawPanelFunction drawFunc, void* pPanelData);
 
 /**
  * Moves the given panel to another layer. Panels on higher layers render after other panels.

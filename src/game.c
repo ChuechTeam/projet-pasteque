@@ -79,7 +79,7 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    srand((unsigned int)time(NULL));
+    srand((unsigned int) time(NULL));
     printf("Projet Pasteque launched!\n");
 
     Callbacks cb;

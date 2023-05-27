@@ -24,7 +24,7 @@ void updatePanelSortedArray(PastequeGameState* pGameState) {
                 // Anomaly detected! Swap until we get to a correct order.
                 backwards = true;
 
-                pGameState->panelsSorted[i-1] = cur;
+                pGameState->panelsSorted[i - 1] = cur;
                 pGameState->panelsSorted[i] = prev;
                 i--;
             } else {

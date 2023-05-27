@@ -1,5 +1,6 @@
 #ifndef PROJET_PASTEQUE_MAIN_MENU_SCENE_H
 #define PROJET_PASTEQUE_MAIN_MENU_SCENE_H
+
 #include "game_state.h"
 
 // Forward declare the MainMenuData struct.
@@ -12,10 +13,15 @@ typedef struct MainMenuData_S MainMenuData;
 MainMenuData* makeMainMenuData();
 
 void mainMenuInit(PastequeGameState* gameState, MainMenuData* data);
+
 void mainMenuUpdate(PastequeGameState* gameState, MainMenuData* data, unsigned long deltaTime);
+
 void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEvent);
+
 void mainMenuDrawBackground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen);
+
 void mainMenuDrawForeground(PastequeGameState* gameState, MainMenuData* data, Screen* pScreen);
+
 void mainMenuFinish(PastequeGameState* gameState, MainMenuData* data);
 
 #endif //PROJET_PASTEQUE_MAIN_MENU_SCENE_H

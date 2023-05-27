@@ -319,7 +319,7 @@ void panelCenterScreen(Panel* pPanel, bool centerX, bool centerY) {
     panelTranslate(pPanel, x, y);
 }
 
-void panelWrapText(const char* pText, int width, bool hasStoryMarkups,  char outWrappedText[], int wrappedTextSize) {
+void panelWrapText(const char* pText, int width, bool hasStoryMarkups, char outWrappedText[], int wrappedTextSize) {
     // A basic line-wrapping algorithm.
 
     bool stringEnd = false;
