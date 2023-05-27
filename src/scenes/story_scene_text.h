@@ -150,7 +150,7 @@
 "Inori, submergé de rancœur, recommença à saccager d’autres bâtiments de la même façon./P Banques, gouvernement, restauration rapide…/P Tout ce qui est responsable de son malheur se retrouve anéanti à tout jamais./C\n"\
 "Après de nombreuses destructions, il s’auto-proclama gouverneur du pays./P Il révolutionna la politique avec un nouveau système gouvernemental, complètement différent du système actuel, sans concept d’argent ou de monnaie./P Il le nomma « Pastèque », et celui-ci eut beaucoup de succès./P\n\n"\
 "Inori était maintenant en train de forger un nouveau monde ;/P un monde sans dette./C\n"\
-"/NWow, sacrée histoire dis-donc./P Ils avaient écrit « le chapitre 11 va vous surprendre » et effectivement, il m’a surpris !/P Ça explique pourquoi le jeu me frustrait toujours, tandis que t’étais scotché dessus, fallait appuyer sur un bouton !/P Pfft, j’avais complètement oublié./P\n\n"\
+"/NWow, sacrée histoire dis donc./P Ils avaient écrit « le chapitre 11 va vous surprendre » et effectivement, il m’a surpris !/P Ça explique pourquoi le jeu me frustrait toujours, tandis que t’étais scotché dessus, fallait appuyer sur un bouton !/P Pfft, j’avais complètement oublié./P\n\n"\
 "Curieux, non, que l’objet existe réellement, mais pas le gouvernement, tu trouves pas ?/P Voilà pourquoi on appelle ça une œuvre de fiction./P\n\n"\
 "Ahhh/P./P./P./P Qu’est-ce que j’aime écrire de la merde."
 
