@@ -12,7 +12,7 @@
 "/STout commence dans une ville banale, déserte, entourée de nombreux bâtiments rectangulaires, hexagonaux, polygonaux, aux bords tranchants comme des rasoirs./P C’est d’ailleurs le sujet d’une publicité éblouissante affichée sur un écran accroché à un des bâtiments ; la seule source de lumière dans cette sombre nuit de nouvelle lune./P\n\n"\
 "Cet étrange paysage sera bientôt le quotidien d'Inori./P Auparavant, il travaillait dans une petite entreprise de télé-restaurant, mais la société a dû renvoyer 5% de ses 20 employés pour des raisons financières./P Une stratégie bien rusée pour ne pas payer les frais de démission./C\n"\
 "Endetté de 1505€, la situation est plus qu’urgente pour Inori./P Son périple commence devant l’entrée d’un bâtiment d’un gris uniforme, rectangulaire mais parsemé de creux autour des bords, à l’image d’une brique de lait vide regonflée d’air./P Inori franchit la porte d’entrée, et là, c’est le choc…/C\n"\
-"/N…Et là QUOI ?/P Quel choc ?/P Y’a pas la suite ?!/P Attends, elle doit bien être quelque part…/P Non, j’ai bien regardé le sommaire et il n’y a qu’une page. C'est pas possible…/P L'histoire n'a pas pu se volatiliser comme ça…/P Bon, tu sais quoi, j’ai trouvé ce jeu dans un vide-greniers, ça devrait t’occuper pendant que je cherche la suite./P Perso, ce jeu m’a fait péter une vitre, tellement que j’ai dû payer 655€ de réparations./P Depuis, j’y touche plus, mais toi, tu peux y arriver."
+"/N…Et là QUOI ?/P Quel choc ?/P Y’a pas la suite ?!/P Attends, elle doit bien être quelque part…/P Non, j’ai bien regardé le sommaire et il n’y a qu’une page./P C'est pas possible…/P L'histoire n'a pas pu se volatiliser comme ça…/P Bon, tu sais quoi, j’ai trouvé ce jeu dans un vide-greniers, ça devrait t’occuper pendant que je cherche la suite./P Perso, ce jeu m’a fait péter une vitre, tellement que j’ai dû payer 655€ de réparations./P Depuis, j’y touche plus, mais toi, tu peux y arriver."
 
 #define STORY_TEXT_2 \
 "/NAh…/P Voilà, j’ai retrouvé la suite./P Tu sais où elle était cachée ?/P Dans un autre livre !/P Et fallait l’acheter en prime !/P Heureusement qu’on a des technologies de livraison par trans-matérialisation, sans quoi, t’aurais attendu jusqu’à demain !/P T’en fais pas, celui-ci, il est bien plus gros, alors tiens-toi bien prêt à appendre la suite de l’histoire./C\n"\
@@ -31,14 +31,14 @@
  Heureusement que tu m’as pas vu manger des pépites de cookies comme un demeuré./P\
  Enfin bon, c’est pas comme si tu pouvais me voir de base./P Prêt pour l’histoire ?/P Ça c’est débloqué !/C\n"\
 "/SAu bout de quelques longues minutes de pure bureaucratie, l’hôte d’accueil revint vers Inori :/P\n"\
-"« Eh bien, je crains que ce ne sera pas possible pour toi. On va pas se mentir, tes antécédents sont assez gênants, pour ainsi dire./P\n"\
+"« Eh bien, je crains que ce ne sera pas possible pour toi./P On va pas se mentir, tes antécédents sont assez gênants, pour ainsi dire./P\n"\
 "— Quoi ? s’exclama Inori./P\n"\
 "— QUOICOUBEH !! cria l’hôte./C\n"\
-"/N./P./P./PNon. Je/P./P./P. J-Je/P./P./P. Désolé, mais…/P Tu…/P Tu dois me laisser une seconde./P Le livre, il…/P Il a fait un bruit tellement strident./P"\
+"/N./P./P./PNon./P Je/P./P./P./P J-Je/P./P./P./P Désolé, mais…/P Tu…/P Tu dois me laisser une seconde./P Le livre, il…/P Il a fait un bruit tellement strident./P"\
 " Les vitres se sont encore brisées…/P Et…/P Il a dit le Mot./P Laisse-moi tranquille, juste un instant…"
 
 #define STORY_TEXT_4 "/NC’est bon./P Je vais mieux./P Excuse-moi pour ce contretemps./P Ce foutu livre a encore décidé de nous mener la vie dure…/P Ne parlons même pas du contenu./P Il est de mon devoir de te raconter l’histoire jusqu’au bout, je tiendrais jusqu’à la mort si tel est le prix à payer pour accomplir mon devoir de narrateur !/P On continue./C\n"\
-"/SCette réplique cinglante mit Inori dans un état de rage incontrôlable./P Enflant de puissance, il se mit à métamorphoser brusquement en une chimère rouge sang. Débordant de violence, il asséna une puissante claque à l’hôte d’accueil./P Une claque monumentale, mémorable, sans précédent, qui projeta instantanément l’hôte à terre, balançant une onde de choc qui fit vibrer le sol, pour ensuite faire léviter les morceaux du carrelage./P Cette claque faisait passer le modulateur pour un jouet de pacotille, tandis que les potentiels clients fuyaient la salle./C\n"\
+"/SCette réplique cinglante mit Inori dans un état de rage incontrôlable./P Enflant de puissance, il se mit à métamorphoser brusquement en une chimère rouge sang./P Débordant de violence, il asséna une puissante claque à l’hôte d’accueil./P Une claque monumentale, mémorable, sans précédent, qui projeta instantanément l’hôte à terre, balançant une onde de choc qui fit vibrer le sol, pour ensuite faire léviter les morceaux du carrelage./P Cette claque faisait passer le modulateur pour un jouet de pacotille, tandis que les potentiels clients fuyaient la salle./C\n"\
 "La puissance d’Inori grandissait au fil des secondes,/P sa forme fantomatique devenait de plus en plus imposante./P Le plafond se mit à craquer, le corps inerte de l’hôte lévita, le comptoir se fendit en deux, le modulateur explosa…/P\n\n"\
 "Les débris orbitaient autour d’Inori tels des guêpes en colère./P Après un sinistre craquement de plafond, le bâtiment s’effondra./P Puis, plus rien./C\n"\
 "/NHmm…/P Vois-tu, c’est gênant, j’ai plus de bouquin./P Il a juste disparu./P Un peu comme le chocolat dans ma tasse d’ailleurs./P Y aurait-il un lien entre le livre et le chocolat ?/P Non, ça peut pas être ça./P Quoi qu’il en soit, je vais partir chercher une solution./P Tu sais quoi faire en attendant."
@@ -54,7 +54,7 @@
 "Peut-être était-ce une force ?/P Ou bien une faiblesse ?/P Ou encore, les deux…/P Quoi qu’il en soit, Inori reste déterminé à accomplir son objectif : rembourser sa dette./P Sans se demander pourquoi il reposait sur son lit, il sortit de son abri, et se mit à rechercher une opportunité dans la ville./C\n"\
 "Au bout de dix minutes de marche à travers le paysage monotone de multiples bâtiments de diverses teintes de gris, un bâtiment en particulier attira son attention./P Celui-là était d’un gris exceptionnellement clair, entre le blanc et l’argent./P Une lumineuse bande jaune entourait le bâtiment en son milieu./P\n\n"\
 "Inori entra à l’intérieur du bâtiment, passant à travers l’élégante porte automatique et admira un agencement remarquable de tables et de chaises, un long comptoir masquant une horde effrénée de travailleurs, sous une odeur envoûtante, unique, inexplicable, mais appétissante./C\n"\
-"/NHmmm… Je suis d’accord, cette odeur, c’est du lourd. Ça donne tellement envie de bouffer, après toute cette lecture ! Pour une fois que le livre est vraiment immersif ! Allez, moi je vais aller me chercher un déjeuner, je reviens vite !"
+"/NHmmm… Je suis d’accord, cette odeur, c’est du lourd./P Ça donne tellement envie de bouffer, après toute cette lecture ! Pour une fois que le livre est vraiment immersif ! Allez, moi je vais aller me chercher un déjeuner, je reviens vite !"
 
 #define STORY_TEXT_7 "/NJe peux te dire, le combo Viande-Poisson-Végé, c’est une tuerie !!/P Je l’ai terminé en 2 minutes tellement c’était bon./P J’espère que la suite de l’histoire sera à la hauteur de ce combo des dieux !/P On va le savoir tout de suite…/C\n"\
 "/SCette ambiance plaisait étrangement à Inori./P Était-ce, pour lui, l’occasion de rembourser sa dette ?/P Inori prit tout son tact en main, se mit en direction du comptoir pour parler à un caissier qui prit la parole avant lui :/P\n/P\n"\
@@ -77,7 +77,7 @@
 "Inori reçut quatre feuilles, surprenamment dénués de texte administratif./P Trois feuilles étaient vides, et une contenait un dessin de canard./P Inori obéit aveuglement, et prit conscience de l’anomalie seulement après avoir signé les quatre feuilles :/P\n\n"\
 "« Pourquoi les feuilles sont vides, au juste ?/P\n"\
 "— Ah, ça, c’est juste pour ma collection de signature, tu veux la voir ?/P\n"\
-"— Non merci. Peut-être un autre jour, répondit Inori par pure politesse./P\n"\
+"— Non merci./P Peut-être un autre jour, répondit Inori par pure politesse./P\n"\
 "— Pas grave, je te retrouve demain pour une journée de taf, à plus !/P\n"\
 "— À demain ! »/P\n\n"\
 "Inori quitta l’enseigne de restauration, excité à l’idée d’enfin gagner de l’argent, puis marcha tranquillement sur la rue, jusqu’à arriver à son domicile, d’une taille très modeste, avec le strict nécessaire pour vivre./P Il se hâta sur son lit, et dormit paisiblement./C\n"\
@@ -86,7 +86,7 @@
 #define STORY_TEXT_9 "/NWOW !/P Ça marche vraiment bien ce truc !/P Tellement que ton jeu s’est terminé tout seul !/P Comme prévu, le livre s’est débloqué./P Mon investissement en vaut enfin la chandelle !/P C’est parti !/C\n"\
 "/SInori commença sa nouvelle vie./P Il se leva, se mit en direction de l’enseigne, et commença à travailler./P Son rôle était maintenant clair : il devait préparer de la nourriture./P Maniant avec brio la viande, le poisson, et surtout le végé, il devenait vite l’un des employés phares du restaurant./P\n\n"\
 "Cette routine lui plaisait./P Il y avait comme un sentiment de compétition : préparer le plus de plats en un temps record était son défi préféré./P Il se tuait véritablement à la tâche, rendant le travail des autres employés minuscules comparé à celui d’Inori./P\n\n"\
-"Recevant compliment sur compliment de la part de Jonas, il recevait parfois des primes allant théoriquement de 0.01€ à 1000€./P En pratique, les primes étaient bien en dessous d’un seul euro…/P Il continua tout de même, sans relâche./C\n"\
+"Recevant compliment sur compliment de la part de Jonas, il recevait parfois des primes allant théoriquement de 0,01€ à 1000€./P En pratique, les primes étaient bien en dessous d’un seul euro…/P Il continua tout de même, sans relâche./C\n"\
 "Première semaine de travail./P\n\n"\
 "Inori se portait bien, préparant moulte VPV, son plat préféré, et aussi préféré des clients./P Il avait tendance à ajouter un peu plus de végé que d’habitude./P Malgré tout, le plat restait succulent./C\n"\
 "Deuxième semaine de travail./P\n\n"\
@@ -103,9 +103,9 @@
 "« Ton végé, Inori ! », entendit-il./P Les fentes s’élargissaient de plus en plus./C\n"\
 "« La viande, mec ! », et ses flammes rougissaient de plus en plus./C\n"\
 "« Ta sauce est par terre… », et la colère s’empara d’Inori petit à petit./C\n"\
-"« Tu le fais exprès ou quoi, Inori ? », et… Non. C’en est trop./P\n\n"\
+"« Tu le fais exprès ou quoi, Inori ? », et… Non./P C’en est trop./P\n\n"\
 "Sa transformation recommença de plus belle./P Le même esprit dévastateur qui a détruit le magasin de haute technologie commençait à prendre possession de l’esprit d’Inori./P\n\n"\
-"Le parquet se mettait lentement à se détacher du sol. Les machines tremblaient déjà./P L’électricité était coupée./P Les employés et les clients étaient déjà en fuite./P\n\n"\
+"Le parquet se mettait lentement à se détacher du sol./P Les machines tremblaient déjà./P L’électricité était coupée./P Les employés et les clients étaient déjà en fuite./P\n\n"\
 "« NON, PAS UNE DEUXIÈME FOIS », cria Inori dans une voix qui ne lui ressemble pas, bien plus résonante et grave./P Il chercha tant bien que mal à dompter et éliminer ce parasite de son esprit, en vain./P Rien n’y fait, le contrôle de ses bras se diminuait au fil du temps./C\n\n"\
 "Dans ses dernières secondes de contrôle, il essayait de manipuler des choses au hasard sur sa table de travail./P Il déplaça des ustensiles, des poêles, de la viande — qu’il fit tomber par terre — et, enfin, des boules de végé./P\n\n"\
 "Il se mit à manipuler plusieurs boules de végé./P Il se mit/P./P./P./P À les aligner./P C’était comme une obsession ; voir les boules alignées, c’était une sorte de chef d’œuvre, une perfection de la nature./P Réussir à réaliser l’alignement parfait nécessitait une précision chirurgicale, une concentration hors norme./P\n\n"\

@@ -54,6 +54,7 @@ struct CrushData_S {
     Panel* scorePanel;
     Panel* gameOverPanel;
     Panel* comboPanel;
+    Panel* storyModePanel; // Can be NULL.
 
     struct PauseMenu {
         UIState state;
@@ -196,6 +197,10 @@ void drawComboPanel(Panel* panel, PastequeGameState* gameState, void* panelData)
     for (int i = 0; i < data->board->combo; ++i) {
         panelDrawText(panel, 0, i + 2, data->board->comboTricks[i], PASTEQUE_COLOR_YELLOW);
     }
+}
+
+void drawStoryModePanel(Panel* panel, PastequeGameState* gameState, void* panelData) {
+    panelDrawText(panel, 0, 0, "MODE HISTOIRE", PASTEQUE_COLOR_WATERMELON_DYN);
 }
 
 // ----------
@@ -599,6 +604,11 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
     data->comboPanel = gsAddPanel(gameState, data->boardPanel->x + data->boardPanel->width + 2, 2,
                                   60, 60, noneAdornment, &drawComboPanel, data);
 
+    if (data->storyModeActivated) {
+        data->storyModePanel = gsAddPanel(gameState, 0, 0, 30, 1, noneAdornment, &drawStoryModePanel, data);
+        // Placed automatically in bottom left corner
+    }
+
     data->pausePanel = gsAddPanel(gameState, 0, 0, 22, 10, boardAdorn, &drawPauseUI, data);
     data->pausePanel->adornment.colorPairOverrideV = PASTEQUE_COLOR_WHITE_ON_WHITE;
     data->pausePanel->adornment.colorPairOverrideEndY = 2;
@@ -669,6 +679,11 @@ void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long de
     // Make sure our modal panels are centered if the window size changes
     panelCenterScreen(data->pausePanel, true, true);
     panelCenterScreen(data->highScorePanel, true, true);
+    if (data->storyModePanel != NULL) {
+        // Place in lower left corner.
+        data->storyModePanel->x = 2;
+        data->storyModePanel->y = gameState->screen->height - 2;
+    }
 
     uiUpdateNotificationPanel(&data->notificationData, deltaTime);
 }

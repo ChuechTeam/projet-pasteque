@@ -91,7 +91,7 @@ int main() {
 
     PastequeGameState* gs = makeGameState();
     // The two first parameters are useless now that we use getmaxyx.
-    GameData* game = createGame(20, 20, gs, &cb, 1);
+    GameData* game = createGame(20, 20, gs, &cb, 0);
     gameLoop(game);
     free(gs);
 }
