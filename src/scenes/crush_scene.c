@@ -45,6 +45,10 @@ struct CrushData_S {
     // STORY
     int storyIndex;
     bool storyModeActivated;
+    // When true, will skip the game and show the next chapter
+    // after a period of time.
+    bool storyAutoSkip;
+    long storyAutoSkipTime;
 
     // PANELS
     Panel* boardPanel;
@@ -553,6 +557,25 @@ void submitHighScore(CrushData* data) {
 }
 
 // ----------
+// STORY
+// ----------
+
+void nextStory(CrushData* data, PastequeGameState* gameState) {
+    gsSwitchScene(gameState, SN_STORY, makeStoryData(data->storyIndex + 1));
+}
+
+void crushStoryAutoSkip(CrushData* data, long micros) {
+    if (data == NULL) {
+        RAGE_QUIT(2500, "data is NULL");
+    }
+
+    if (data->storyModeActivated) {
+        data->storyAutoSkip = true;
+        data->storyAutoSkipTime = micros;
+    }
+}
+
+// ----------
 // GAME FUNCTIONS (Init, Event, Update, Draw, Finish)
 // ----------
 
@@ -595,6 +618,10 @@ void crushInit(PastequeGameState* gameState, CrushData* data) {
 void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long deltaTime) {
     if (!data->paused) {
         data->board->playTime += deltaTime;
+        if (data->storyAutoSkip && data->board->playTime >= data->storyAutoSkipTime) {
+            nextStory(data, gameState);
+            return;
+        }
 
         if (data->playState == CPS_EVALUATING_BOARD) {
             bool markedSomething = boardMarkAlignedCells(data->board);
@@ -658,7 +685,7 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
 
         if (pEvent->code == KEY_S && data->storyModeActivated) {
             // Temporary cheat: go to next story
-            gsSwitchScene(gameState, SN_STORY, makeStoryData(data->storyIndex + 1));
+            nextStory(data, gameState);
             return;
         }
 
@@ -666,7 +693,7 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
             if (data->playState == CPS_GAME_OVER) {
                 if (data->storyModeActivated) {
                     // Continue the story
-                    gsSwitchScene(gameState, SN_STORY, makeStoryData(data->storyIndex + 1));
+                    nextStory(data, gameState);
                 } else {
                     // Play again
                     CrushBoard* orig = data->board;
@@ -759,3 +786,4 @@ void crushFinish(PastequeGameState* gameState, CrushData* data) {
         free(data->board);
     }
 }
+

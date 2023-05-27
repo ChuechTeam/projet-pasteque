@@ -319,7 +319,7 @@ void panelCenterScreen(Panel* pPanel, bool centerX, bool centerY) {
     panelTranslate(pPanel, x, y);
 }
 
-void panelWrapText(const char* pText, int width, char outWrappedText[], int wrappedTextSize) {
+void panelWrapText(const char* pText, int width, bool hasStoryMarkups,  char outWrappedText[], int wrappedTextSize) {
     // A basic line-wrapping algorithm.
 
     bool stringEnd = false;
@@ -389,6 +389,9 @@ void panelWrapText(const char* pText, int width, char outWrappedText[], int wrap
             if (outCursor == wrappedTextSize - 1) {
                 stringEnd = true;
             }
+        } else if (hasStoryMarkups && pText[i] == '/') {
+            // Exempt markups (/C, /N, etc.) from the line calculation.
+            lineLength -= 2;
         }
     }
 

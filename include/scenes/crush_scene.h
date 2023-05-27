@@ -27,6 +27,9 @@ typedef struct CrushData_S CrushData;
 // -1 to storyIndex disables the story
 CrushData* makeCrushData(CrushBoard* board, CrushInputMethod inputMethod, int storyIndex);
 
+// Shows the next chapter automatically, after a given period of time.
+void crushStoryAutoSkip(CrushData* data, long micros);
+
 void crushInit(PastequeGameState* gameState, CrushData* data);
 
 void crushUpdate(PastequeGameState* gameState, CrushData* data, unsigned long deltaTime);

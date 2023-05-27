@@ -254,7 +254,7 @@ void uiUpdateNotificationPanel(NotificationPanelData* data, unsigned long deltaM
     // Wrap the text and recalculate the location of the panel
     // when the text changes.
     if (data->textDirty) {
-        panelWrapText(data->text, data->maxWidth - 2, data->textWrapped, NOTIF_TEXT_MAX);
+        panelWrapText(data->text, data->maxWidth - 2, false, data->textWrapped, NOTIF_TEXT_MAX);
 
         data->textWrappedLines = 1;
         int i = 0;
