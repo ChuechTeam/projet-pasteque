@@ -37,6 +37,8 @@ typedef struct PastequeGameState_S {
     bool enableDynamicColors;
     // True if cheats are enabled (story mode skip, currently)
     bool enableCheats;
+    // True to save files to the user's home directory.
+    bool enableLocalSaveFile;
 
     // The array containing all panels. By default, they are zeroed-out so they don't render.
     Panel panels[MAX_PANELS];

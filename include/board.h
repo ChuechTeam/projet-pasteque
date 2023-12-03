@@ -84,6 +84,9 @@ typedef enum {
     SR_NO_MATCH
 } SwapResult;
 
+// Required for boardSaveFilePath
+struct PastequeGameState_S;
+
 // Allocates a new board of the given width and height with randomized values,
 // and with the given amount of symbols from 3 to 6. Should be freed with free().
 CrushBoard* makeCrushBoard(BoardSizePreset sizePreset, int width, int height, char symbols);
@@ -109,6 +112,10 @@ bool boardAnySwapPossible(CrushBoard* board);
 
 // Sets the combo to 0 and clears all combo tricks.
 void boardResetCombo(CrushBoard* board);
+
+// Returns the path where a save file of name fileName should be stored.
+// IMPORTANT: The returned path must be freed using free().
+char* boardSaveFilePath(struct PastequeGameState_S* gameState, const char* fileName);
 
 // Saves the board to a file. errorMessage must point to an array of 256 or more characters.
 // Returns true if the save succeeded. Else, returns false and fills the errorMessage

@@ -301,7 +301,7 @@ void drawHighScoreUI(Panel* panel, PastequeGameState* gameState, void* panelData
 char* getPresetLabel(BoardSizePreset preset) {
     switch (preset) {
         case BSP_SMALL:
-            return "Petite grile";
+            return "Petite grille";
         case BSP_MEDIUM:
             return "Moyenne grille";
         case BSP_LARGE:
@@ -467,11 +467,14 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
             switchSubMenu(data, data->playPanel, &data->playUI.state);
             return;
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->resumeButton, pEvent)) {
+            char* savePath = boardSaveFilePath(gameState, "savefile.pasteque");
+
             char errMsg[256];
             CrushBoard* board;
             // Make sure the file exists.
-            if (access("savefile.pasteque", F_OK) == 0) {
-                if (boardReadFromFile("savefile.pasteque", &board, errMsg)) {
+            if (access(savePath, F_OK) == 0) {
+                if (boardReadFromFile(savePath, &board, errMsg)) {
+                    free(savePath);
                     gsSwitchScene(gameState, SN_CRUSH, makeCrushData(board, CIM_ALL));
                     return;
                 } else {
@@ -481,6 +484,8 @@ void mainMenuEvent(PastequeGameState* gameState, MainMenuData* data, Event* pEve
                 uiDisplayNotification(&data->notificationData, "Aucune partie n'a été sauvegardée.",
                                       PASTEQUE_COLOR_WHITE_ON_DARK_ORANGE, MICROS(5000));
             }
+
+            free(savePath);
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->storyModeButton, pEvent)) {
             gsSwitchScene(gameState, SN_STORY, makeStoryData(0));
         } else if (uiHandleToggleOptionEvent(&mainUI->state, &mainUI->highScoresButton, pEvent)) {

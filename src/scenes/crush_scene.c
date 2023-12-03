@@ -413,18 +413,22 @@ void gameOver(CrushData* data) {
     toggleHighScoreUI(data);
 }
 
-void saveGame(CrushData* data) {
+void saveGame(PastequeGameState* gameState, CrushData* data) {
     if (data->playState == CPS_GAME_OVER) {
         return;
     }
 
+    char* savePath = boardSaveFilePath(gameState, "savefile.pasteque");
+
     char errMsg[256];
-    if (boardSaveToFile(data->board, "savefile.pasteque", errMsg)) {
+    if (boardSaveToFile(data->board, savePath, errMsg)) {
         uiDisplayNotification(&data->notificationData, "Partie sauvegardée !",
                               PASTEQUE_COLOR_WHITE_ON_DARK_GREEN, MICROS(5000));
     } else {
         uiDisplayNotification(&data->notificationData, errMsg, PASTEQUE_COLOR_WHITE_ON_RED, MICROS(5000));
     }
+
+    free(savePath);
 }
 
 // ----------
@@ -729,7 +733,7 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
                 togglePause(data);
             } else {
                 // Save
-                saveGame(data);
+                saveGame(gameState, data);
                 togglePause(data);
             }
         } else if (uiHandleToggleOptionEvent(&pauseUI->state, &pauseUI->quitButton, pEvent)) {
@@ -787,7 +791,7 @@ void crushEvent(PastequeGameState* gameState, CrushData* data, Event* pEvent) {
             togglePause(data);
         }
         if (code == KEY_N) {
-            saveGame(data);
+            saveGame(gameState, data);
         }
     }
 }

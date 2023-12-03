@@ -4,6 +4,19 @@
 #include <errno.h>
 #include "libGameRGR2.h"
 #include "board.h"
+#include "game_state.h"
+
+// Only support local save files for Linux & Mac for now.
+#if defined(__unix__)
+
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/stat.h>
+
+#define LOCAL_SAVE_FILE_SUPPORTED 1
+#else
+#define LOCAL_SAVE_FILE_SUPPORTED 0
+#endif
 
 #define LINE_END_AUTODETECT (-1000)
 
@@ -748,6 +761,65 @@ void boardGetPresetDimensions(BoardSizePreset preset, int* outWidth, int* outHei
             break;
     }
 }
+
+char* boardSaveFilePath(PastequeGameState* gameState, const char* fileName) {
+    if (gameState == NULL) {
+        RAGE_QUIT(2002, "Game state is NULL.");
+    }
+    if (fileName == NULL) {
+        RAGE_QUIT(2200, "File name is NULL.");
+    }
+
+    if (!gameState->enableLocalSaveFile || !LOCAL_SAVE_FILE_SUPPORTED) {
+        // No change, just return a copied path (for freeing it later)
+        char* pathCopy = malloc(strlen(fileName) * sizeof(char));
+        strcpy(pathCopy, fileName);
+        return pathCopy;
+    }
+#if LOCAL_SAVE_FILE_SUPPORTED
+    else {
+        // Find the home/.config directory
+        char* configDir = getenv("XDG_CONFIG_HOME");
+        if (configDir == NULL) {
+            // No XDG, let's directly put it into home.
+            configDir = getenv("HOME");
+        }
+        // Still no home? Let's try with getpwuid
+        if (configDir == NULL) {
+            configDir = getpwuid(getuid())->pw_dir;
+        }
+        if (configDir == NULL) {
+            // At this point I'm out of luck
+            RAGE_QUIT(2201, "Unable to find the home directory.");
+        }
+
+        const char* pastequeDirName = "/.pasteque/";
+        char* saveFilePath = calloc(1,
+                (
+                        strlen(configDir)
+                        + strlen(fileName)
+                        + strlen(pastequeDirName)
+                        + 1 // Null terminator
+                ) * sizeof(char));
+
+        strcat(saveFilePath, configDir);
+        strcat(saveFilePath, pastequeDirName);
+
+        // Before putting the file name, create the directory if it doesn't exist.
+        // 0700 : rwu for owner, no permission for group and others.
+        int result = mkdir(saveFilePath, 0700);
+        if (result != 0 && errno != EEXIST) {
+            // Error creating the directory.
+            RAGE_QUIT(2202, "Unable to create the .pasteque directory. (path=%s, errno=%d)", saveFilePath, errno);
+        }
+
+        strcat(saveFilePath, fileName);
+
+        return saveFilePath;
+    }
+#endif
+}
+
 
 bool boardSaveToFile(CrushBoard* board, const char* path, char errorMessage[256]) {
     if (board == NULL) {

@@ -2,8 +2,8 @@
 # Note that this makefile is barely optimized for incremental compilation.
 # If you need incremental compilation, use CMake instead.
 CC = gcc
-# Add any options here
-CFLAGS = -std=c11 -fPIC
+# Add any options here (+ -g for debug)
+CFLAGS = -std=c11 -fPIC -g
 # Enable multi threading
 MAKEFLAGS = -j 4
 OUT = build-make

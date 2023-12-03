@@ -110,6 +110,14 @@ void initGameState(PastequeGameState* pGameState, Screen* pScreen) {
     } else {
         pGameState->enableCheats = false;
     }
+
+    // Enable local save files if wanted.
+    char* localSaveEnv = getenv("PASTEQUE_LOCAL_SAVE");
+    if (localSaveEnv != NULL && strcmp(localSaveEnv, "1") == 0) {
+        pGameState->enableLocalSaveFile = true;
+    } else {
+        pGameState->enableLocalSaveFile = false;
+    }
 }
 
 void gsSwitchScene(PastequeGameState* pGameState, SceneName newScene, void* newSceneData) {
